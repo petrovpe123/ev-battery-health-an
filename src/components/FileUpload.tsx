@@ -147,7 +147,7 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
           </Alert>
         )}
         
-        <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+        <div className="mt-6 p-4 bg-muted/50 rounded-lg text-center">
           <h4 className="font-medium mb-2">Expected CSV Format:</h4>
           <code className="text-sm text-muted-foreground">
             timestamp,voltage,temperature<br />
