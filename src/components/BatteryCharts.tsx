@@ -1,19 +1,30 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { BatteryReading } from '@/lib/types';
 import { format } from 'date-fns';
+import { sampleData, shouldShowDots } from '@/lib/data-sampling';
 
 interface BatteryChartsProps {
   readings: BatteryReading[];
 }
 
 export function BatteryCharts({ readings }: BatteryChartsProps) {
-  const chartData = readings.map(reading => ({
-    ...reading,
-    time: new Date(reading.timestamp).getTime(),
-    formattedTime: format(new Date(reading.timestamp), 'HH:mm')
-  }));
+  // Sample data for better performance with large datasets
+  const sampledReadings = useMemo(() => {
+    return sampleData(readings, 500);
+  }, [readings]);
+
+  const chartData = useMemo(() => {
+    return sampledReadings.map(reading => ({
+      ...reading,
+      time: new Date(reading.timestamp).getTime(),
+      formattedTime: format(new Date(reading.timestamp), 'HH:mm')
+    }));
+  }, [sampledReadings]);
+
+  // Determine if we should show dots based on original data size
+  const showDots = useMemo(() => shouldShowDots(readings.length), [readings.length]);
 
   const formatTooltipLabel = (label: number) => {
     return format(new Date(label), 'MMM dd, HH:mm');
@@ -68,8 +79,9 @@ export function BatteryCharts({ readings }: BatteryChartsProps) {
                   dataKey="voltage" 
                   stroke="oklch(0.45 0.15 240)" 
                   strokeWidth={2}
-                  dot={{ fill: 'oklch(0.45 0.15 240)', r: 3 }}
+                  dot={showDots ? { fill: 'oklch(0.45 0.15 240)', r: 3 } : false}
                   activeDot={{ r: 5, fill: 'oklch(0.75 0.12 200)' }}
+                  isAnimationActive={false}
                 />
               </LineChart>
             </ResponsiveContainer>
@@ -118,8 +130,9 @@ export function BatteryCharts({ readings }: BatteryChartsProps) {
                   dataKey="temperature" 
                   stroke="oklch(0.6 0.18 45)" 
                   strokeWidth={2}
-                  dot={{ fill: 'oklch(0.6 0.18 45)', r: 3 }}
+                  dot={showDots ? { fill: 'oklch(0.6 0.18 45)', r: 3 } : false}
                   activeDot={{ r: 5, fill: 'oklch(0.75 0.12 200)' }}
+                  isAnimationActive={false}
                 />
               </LineChart>
             </ResponsiveContainer>
