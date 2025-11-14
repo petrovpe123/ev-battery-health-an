@@ -40,12 +40,20 @@ Track and analyze electric vehicle battery performance through telemetry data vi
 - **Progression**: Data processed → stored locally → accessible for future sessions
 - **Success criteria**: Data persists between browser sessions
 
+### PDF Report Export
+- **Functionality**: Download comprehensive battery health report as PDF document
+- **Purpose**: Enable users to save, share, and archive analysis results professionally
+- **Trigger**: User clicks Export PDF button after analysis completes
+- **Progression**: Analysis complete → user clicks export → PDF generated → file downloaded
+- **Success criteria**: Well-formatted PDF with health score, charts data, AI summary, and recommendations
+
 ## Edge Case Handling
 - **Invalid CSV Format**: Clear error message with format example
 - **Missing Data Points**: Handle gaps in telemetry gracefully
 - **Large Files**: Progress indicators and performance optimization
 - **No Data**: Empty state with upload instructions
 - **AI Analysis Failure**: Fallback to basic statistics summary
+- **PDF Export Before Analysis**: Disable button until analysis completes with helpful toast message
 
 ## Design Direction
 Professional and technical aesthetic that conveys precision and reliability, similar to automotive diagnostic tools. Clean interface that lets data visualization take center stage.
@@ -98,6 +106,7 @@ Subtle functional animations that guide attention to data insights without overw
   - Battery: battery for health status
   - Chart: chart-line for data visualization
   - AI: sparkles for analysis generation
+  - Export: file-pdf for PDF download
 - **Spacing**: Consistent 16px/24px rhythm using Tailwind's spacing scale
 - **Mobile**: 
   - Single column layout with full-width charts

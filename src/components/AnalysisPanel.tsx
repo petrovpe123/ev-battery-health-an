@@ -10,9 +10,10 @@ import { generateAIAnalysis } from '@/lib/battery-analysis';
 interface AnalysisPanelProps {
   readings: BatteryReading[];
   temperatureUnit: TemperatureUnit;
+  onAnalysisComplete?: (analysis: BatteryAnalysis) => void;
 }
 
-export function AnalysisPanel({ readings, temperatureUnit }: AnalysisPanelProps) {
+export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }: AnalysisPanelProps) {
   const [analysis, setAnalysis] = useState<BatteryAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -32,6 +33,9 @@ export function AnalysisPanel({ readings, temperatureUnit }: AnalysisPanelProps)
         await new Promise(resolve => setTimeout(resolve, 1000));
         const result = await generateAIAnalysis(readings);
         setAnalysis(result);
+        if (onAnalysisComplete) {
+          onAnalysisComplete(result);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Analysis failed');
       } finally {
@@ -42,7 +46,7 @@ export function AnalysisPanel({ readings, temperatureUnit }: AnalysisPanelProps)
     if (readings.length > 0) {
       runAnalysis();
     }
-  }, [readings]);
+  }, [readings, onAnalysisComplete]);
 
   const getHealthColor = (score: number) => {
     if (score >= 80) return 'bg-green-500';

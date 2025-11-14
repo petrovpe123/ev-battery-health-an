@@ -6,13 +6,16 @@ import { Separator } from '@/components/ui/separator';
 import { FileUpload } from '@/components/FileUpload';
 import { BatteryCharts } from '@/components/BatteryCharts';
 import { AnalysisPanel } from '@/components/AnalysisPanel';
-import { BatteryReading, TemperatureUnit } from '@/lib/types';
-import { Car, ArrowClockwise, Thermometer } from '@phosphor-icons/react';
+import { BatteryReading, TemperatureUnit, BatteryAnalysis } from '@/lib/types';
+import { Car, ArrowClockwise, Thermometer, FilePdf } from '@phosphor-icons/react';
+import { generatePDFReport } from '@/lib/pdf-export';
+import { toast } from 'sonner';
 
 function App() {
   const [batteryData, setBatteryData] = useKV<BatteryReading[]>('battery-data', []);
   const [currentData, setCurrentData] = useState<BatteryReading[]>([]);
   const [temperatureUnit, setTemperatureUnit] = useKV<TemperatureUnit>('temperature-unit', 'C');
+  const [currentAnalysis, setCurrentAnalysis] = useState<BatteryAnalysis | null>(null);
 
   const handleDataParsed = (readings: BatteryReading[]) => {
     setCurrentData(readings);
@@ -36,6 +39,25 @@ function App() {
   const getAvgTemperature = () => {
     const avgCelsius = displayData.reduce((sum, r) => sum + r.temperature, 0) / displayData.length;
     return temperatureUnit === 'C' ? avgCelsius : celsiusToFahrenheit(avgCelsius);
+  };
+
+  const handleExportPDF = () => {
+    if (!currentAnalysis) {
+      toast.error('Analysis not available yet. Please wait for the analysis to complete.');
+      return;
+    }
+
+    try {
+      generatePDFReport({
+        readings: displayData,
+        analysis: currentAnalysis,
+        temperatureUnit: temperatureUnit || 'C'
+      });
+      toast.success('PDF report downloaded successfully!');
+    } catch (error) {
+      toast.error('Failed to generate PDF report');
+      console.error('PDF generation error:', error);
+    }
   };
 
   return (
@@ -64,6 +86,16 @@ function App() {
               >
                 <Thermometer size={16} />
                 °{temperatureUnit}
+              </Button>
+            )}
+            {hasData && currentAnalysis && (
+              <Button 
+                onClick={handleExportPDF} 
+                variant="default" 
+                className="gap-2"
+              >
+                <FilePdf size={16} />
+                Export PDF
               </Button>
             )}
             {hasData && (
@@ -133,7 +165,11 @@ function App() {
             {/* Analysis */}
             <div>
               <h2 className="text-xl font-semibold mb-4">Battery Health Analysis</h2>
-              <AnalysisPanel readings={displayData} temperatureUnit={temperatureUnit || 'C'} />
+              <AnalysisPanel 
+                readings={displayData} 
+                temperatureUnit={temperatureUnit || 'C'} 
+                onAnalysisComplete={setCurrentAnalysis}
+              />
             </div>
 
             {/* Upload New Data */}
