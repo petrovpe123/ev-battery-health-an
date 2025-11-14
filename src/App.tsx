@@ -64,7 +64,7 @@ function App() {
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col gap-4 mb-8 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10">
               <Car size={24} className="text-primary" />
@@ -77,7 +77,7 @@ function App() {
             </div>
           </div>
           
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             {hasData && (
               <Button 
                 onClick={toggleTemperatureUnit} 
@@ -92,7 +92,7 @@ function App() {
               <Button 
                 onClick={handleExportPDF} 
                 variant="default" 
-                className="gap-2"
+                className="gap-2 relative z-10"
               >
                 <FilePdf size={16} />
                 Export PDF
