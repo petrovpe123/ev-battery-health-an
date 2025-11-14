@@ -1,3 +1,5 @@
+export type TemperatureUnit = 'C' | 'F';
+
 export interface BatteryReading {
   timestamp: string;
   voltage: number;
