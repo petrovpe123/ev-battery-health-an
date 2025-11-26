@@ -3,6 +3,7 @@ import { useKV } from '@github/spark/hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Toaster } from '@/components/ui/sonner';
 import { FileUpload } from '@/components/FileUpload';
 import { BatteryCharts } from '@/components/BatteryCharts';
 import { AnalysisPanel } from '@/components/AnalysisPanel';
@@ -62,6 +63,7 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background">
+      <Toaster />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="flex flex-col gap-4 mb-8 lg:flex-row lg:items-center lg:justify-between">
