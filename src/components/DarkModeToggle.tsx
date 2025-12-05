@@ -7,15 +7,15 @@ export function DarkModeToggle() {
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
-  // useEffect only runs on the client, so now we can safely show the UI
+  // The effect function only runs on the client, ensuring theme is safely accessed
   useEffect(() => {
     setMounted(true);
   }, []);
 
   if (!mounted) {
     return (
-      <Button variant="outline" size="icon" className="w-10 h-10">
-        <Sun size={20} />
+      <Button variant="outline" size="icon" className="w-10 h-10" disabled>
+        <div className="w-5 h-5" />
       </Button>
     );
   }
