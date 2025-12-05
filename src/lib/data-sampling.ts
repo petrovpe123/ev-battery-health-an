@@ -50,6 +50,11 @@ export function downsampleLTTB<T extends DataPoint>(
   xKey?: string,
   yKey?: string
 ): T[] {
+  // Handle empty data
+  if (data.length === 0) {
+    return data;
+  }
+
   // If data is smaller than threshold, return as-is
   if (data.length <= threshold) {
     return data;
@@ -74,7 +79,9 @@ export function downsampleLTTB<T extends DataPoint>(
   }
 
   if (!yKey) {
-    throw new Error('Could not determine y-axis key for sampling');
+    throw new Error(
+      'Could not determine y-axis key for sampling. Ensure data contains at least one numeric property other than the x-axis key.'
+    );
   }
 
   const sampled: T[] = [];
@@ -107,7 +114,16 @@ export function downsampleLTTB<T extends DataPoint>(
       const yVal = data[j][yKey!];
       
       // Handle both string timestamps and numeric times
-      const x = typeof xVal === 'string' ? new Date(xVal).getTime() : xVal;
+      let x: number;
+      if (typeof xVal === 'string') {
+        const timestamp = new Date(xVal).getTime();
+        if (isNaN(timestamp)) {
+          throw new Error(`Invalid date string at index ${j}: ${xVal}`);
+        }
+        x = timestamp;
+      } else {
+        x = xVal;
+      }
       
       avgX += x;
       avgY += yVal;
@@ -120,9 +136,16 @@ export function downsampleLTTB<T extends DataPoint>(
     }
 
     // Point in the previous bucket that was selected
-    const prevX = typeof data[prevSelectedIndex][xKey!] === 'string' 
-      ? new Date(data[prevSelectedIndex][xKey!] as string).getTime()
-      : data[prevSelectedIndex][xKey!];
+    let prevX: number;
+    if (typeof data[prevSelectedIndex][xKey!] === 'string') {
+      const timestamp = new Date(data[prevSelectedIndex][xKey!] as string).getTime();
+      if (isNaN(timestamp)) {
+        throw new Error(`Invalid date string at index ${prevSelectedIndex}: ${data[prevSelectedIndex][xKey!]}`);
+      }
+      prevX = timestamp;
+    } else {
+      prevX = data[prevSelectedIndex][xKey!];
+    }
     const prevY = data[prevSelectedIndex][yKey!];
 
     // Find point in current bucket with largest triangle area
@@ -130,9 +153,16 @@ export function downsampleLTTB<T extends DataPoint>(
     let maxAreaIndex = bucketStart;
 
     for (let j = bucketStart; j < bucketEnd; j++) {
-      const currX = typeof data[j][xKey!] === 'string'
-        ? new Date(data[j][xKey!] as string).getTime()
-        : data[j][xKey!];
+      let currX: number;
+      if (typeof data[j][xKey!] === 'string') {
+        const timestamp = new Date(data[j][xKey!] as string).getTime();
+        if (isNaN(timestamp)) {
+          throw new Error(`Invalid date string at index ${j}: ${data[j][xKey!]}`);
+        }
+        currX = timestamp;
+      } else {
+        currX = data[j][xKey!];
+      }
       const currY = data[j][yKey!];
 
       const area = triangleArea(
