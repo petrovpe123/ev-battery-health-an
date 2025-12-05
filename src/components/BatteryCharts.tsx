@@ -1,12 +1,13 @@
 import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { BatteryReading } from '@/lib/types';
+import { BatteryReading, TemperatureUnit } from '@/lib/types';
 import { format } from 'date-fns';
 import { sampleData, shouldShowDots } from '@/lib/data-sampling';
 
 interface BatteryChartsProps {
   readings: BatteryReading[];
+  temperatureUnit: TemperatureUnit;
 }
 
 /**
@@ -49,7 +50,7 @@ export function BatteryCharts({ readings }: BatteryChartsProps) {
           <p className="font-medium">{formatTooltipLabel(label)}</p>
           {payload.map((entry: any, index: number) => (
             <p key={index} style={{ color: entry.color }}>
-              {entry.name}: {entry.value.toFixed(2)}{entry.name === 'voltage' ? 'V' : '°C'}
+              {entry.name === 'displayTemperature' ? 'temperature' : entry.name}: {entry.value.toFixed(2)}{entry.name === 'voltage' ? 'V' : `°${temperatureUnit}`}
             </p>
           ))}
         </div>
@@ -57,6 +58,9 @@ export function BatteryCharts({ readings }: BatteryChartsProps) {
     }
     return null;
   };
+
+  const optimalTemp = convertTemperature(25);
+  const highTemp = convertTemperature(35);
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -132,14 +136,14 @@ export function BatteryCharts({ readings }: BatteryChartsProps) {
                 />
                 <YAxis 
                   stroke="oklch(0.5 0.03 240)"
-                  tickFormatter={(value) => `${value}°C`}
+                  tickFormatter={(value) => `${value}°${temperatureUnit}`}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                <ReferenceLine y={25} stroke="oklch(0.75 0.12 200)" strokeDasharray="2 2" />
-                <ReferenceLine y={35} stroke="oklch(0.6 0.2 25)" strokeDasharray="2 2" />
+                <ReferenceLine y={optimalTemp} stroke="oklch(0.75 0.12 200)" strokeDasharray="2 2" />
+                <ReferenceLine y={highTemp} stroke="oklch(0.6 0.2 25)" strokeDasharray="2 2" />
                 <Line 
                   type="monotone" 
-                  dataKey="temperature" 
+                  dataKey="displayTemperature" 
                   stroke="oklch(0.6 0.18 45)" 
                   strokeWidth={2}
                   dot={showDots ? { fill: 'oklch(0.6 0.18 45)', r: 3 } : false}
@@ -152,11 +156,11 @@ export function BatteryCharts({ readings }: BatteryChartsProps) {
           <div className="mt-4 flex items-center gap-4 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <div className="w-3 h-0.5 bg-accent"></div>
-              <span>Optimal (25°C)</span>
+              <span>Optimal ({optimalTemp.toFixed(0)}°{temperatureUnit})</span>
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-0.5 bg-destructive"></div>
-              <span>High (35°C)</span>
+              <span>High ({highTemp.toFixed(0)}°{temperatureUnit})</span>
             </div>
           </div>
         </CardContent>

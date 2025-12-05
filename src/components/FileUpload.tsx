@@ -146,15 +146,6 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
-        
-        <div className="mt-6 p-4 bg-muted/50 rounded-lg text-center">
-          <h4 className="font-medium mb-2">Expected CSV Format:</h4>
-          <code className="text-sm text-muted-foreground">
-            timestamp,voltage,temperature<br />
-            2024-01-15T08:00:00Z,12.6,22.5<br />
-            2024-01-15T09:45:00Z,11.2,26.1
-          </code>
-        </div>
       </CardContent>
     </Card>
   );

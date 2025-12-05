@@ -4,17 +4,25 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BatteryChargingVertical, Sparkle, TrendUp, TrendDown } from '@phosphor-icons/react';
-import { BatteryAnalysis, BatteryReading } from '@/lib/types';
+import { BatteryAnalysis, BatteryReading, TemperatureUnit } from '@/lib/types';
 import { generateAIAnalysis } from '@/lib/battery-analysis';
 
 interface AnalysisPanelProps {
   readings: BatteryReading[];
+  temperatureUnit: TemperatureUnit;
+  onAnalysisComplete?: (analysis: BatteryAnalysis) => void;
 }
 
-export function AnalysisPanel({ readings }: AnalysisPanelProps) {
+export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }: AnalysisPanelProps) {
   const [analysis, setAnalysis] = useState<BatteryAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const celsiusToFahrenheit = (celsius: number) => (celsius * 9/5) + 32;
+
+  const convertTemperature = (celsius: number) => {
+    return temperatureUnit === 'C' ? celsius : celsiusToFahrenheit(celsius);
+  };
 
   useEffect(() => {
     const runAnalysis = async () => {
@@ -25,6 +33,9 @@ export function AnalysisPanel({ readings }: AnalysisPanelProps) {
         await new Promise(resolve => setTimeout(resolve, 1000));
         const result = await generateAIAnalysis(readings);
         setAnalysis(result);
+        if (onAnalysisComplete) {
+          onAnalysisComplete(result);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Analysis failed');
       } finally {
@@ -35,7 +46,7 @@ export function AnalysisPanel({ readings }: AnalysisPanelProps) {
     if (readings.length > 0) {
       runAnalysis();
     }
-  }, [readings]);
+  }, [readings, onAnalysisComplete]);
 
   const getHealthColor = (score: number) => {
     if (score >= 80) return 'bg-green-500';
@@ -147,7 +158,7 @@ export function AnalysisPanel({ readings }: AnalysisPanelProps) {
                   </div>
                   <div className="flex justify-between">
                     <span>Avg Temperature:</span>
-                    <span className="font-mono">{analysis.avgTemperature.toFixed(1)}°C</span>
+                    <span className="font-mono">{convertTemperature(analysis.avgTemperature).toFixed(1)}°{temperatureUnit}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Data Points:</span>
@@ -172,7 +183,7 @@ export function AnalysisPanel({ readings }: AnalysisPanelProps) {
                   <div className="flex justify-between">
                     <span>Temp Range:</span>
                     <span className="font-mono">
-                      {analysis.temperatureRange.min.toFixed(1)}°C - {analysis.temperatureRange.max.toFixed(1)}°C
+                      {convertTemperature(analysis.temperatureRange.min).toFixed(1)}°{temperatureUnit} - {convertTemperature(analysis.temperatureRange.max).toFixed(1)}°{temperatureUnit}
                     </span>
                   </div>
                 </div>
