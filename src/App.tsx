@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { FileUpload } from '@/components/FileUpload';
 import { BatteryCharts } from '@/components/BatteryCharts';
 import { AnalysisPanel } from '@/components/AnalysisPanel';
+import { DarkModeToggle } from '@/components/DarkModeToggle';
 import { BatteryReading, TemperatureUnit, BatteryAnalysis } from '@/lib/types';
 import { Car, ArrowClockwise, Thermometer, FilePdf } from '@phosphor-icons/react';
 import { generatePDFReport } from '@/lib/pdf-export';
@@ -80,6 +81,7 @@ function App() {
           </div>
           
           <div className="flex items-center gap-2 flex-shrink-0">
+            <DarkModeToggle />
             {hasData && (
               <Button 
                 onClick={toggleTemperatureUnit} 
