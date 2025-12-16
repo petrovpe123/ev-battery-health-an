@@ -25,6 +25,8 @@ export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }:
   };
 
   useEffect(() => {
+    let cancelled = false;
+
     const runAnalysis = async () => {
       setLoading(true);
       setError(null);
@@ -32,20 +34,35 @@ export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }:
       try {
         await new Promise(resolve => setTimeout(resolve, 1000));
         const result = await generateAIAnalysis(readings);
-        setAnalysis(result);
-        if (onAnalysisComplete) {
-          onAnalysisComplete(result);
+        
+        // Only update state if this effect hasn't been cancelled
+        if (!cancelled) {
+          setAnalysis(result);
+          if (onAnalysisComplete) {
+            onAnalysisComplete(result);
+          }
         }
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Analysis failed');
+        // Only update state if this effect hasn't been cancelled
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Analysis failed');
+        }
       } finally {
-        setLoading(false);
+        // Only update state if this effect hasn't been cancelled
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     if (readings.length > 0) {
       runAnalysis();
     }
+
+    // Cleanup function to cancel the effect when readings change or component unmounts
+    return () => {
+      cancelled = true;
+    };
   }, [readings, onAnalysisComplete]);
 
   const getHealthColor = (score: number) => {
