@@ -1,7 +1,7 @@
 import { BatteryReading, BatteryAnalysis } from './types';
 
 export function parseCSV(csvContent: string): BatteryReading[] {
-  const lines = csvContent.trim().split('\n');
+  const lines = csvContent.trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n').split('\n');
   const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
   
   const timestampIndex = headers.findIndex(h => h.includes('timestamp') || h.includes('time'));
