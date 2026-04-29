@@ -1,11 +1,12 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Upload, FileText, Warning } from '@phosphor-icons/react';
 import { BatteryReading } from '@/lib/types';
-import { parseCSV } from '@/lib/battery-analysis';
+
+const MAX_FILE_SIZE_MB = 50;
 
 interface FileUploadProps {
   onDataParsed: (readings: BatteryReading[]) => void;
@@ -16,27 +17,60 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const workerRef = useRef<Worker | null>(null);
 
   const handleFileRead = useCallback(async (file: File) => {
     setUploading(true);
     setProgress(0);
     setError(null);
 
+    // Terminate any previous worker that may still be running
+    workerRef.current?.terminate();
+    workerRef.current = null;
+
     try {
+      setProgress(10);
       const content = await file.text();
-      
-      setProgress(50);
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const readings = parseCSV(content);
-      
+      setProgress(20);
+
+      const readings = await new Promise<BatteryReading[]>((resolve, reject) => {
+        const worker = new Worker(
+          new URL('../workers/csv-parser.worker.ts', import.meta.url),
+          { type: 'module' }
+        );
+        workerRef.current = worker;
+
+        worker.onmessage = (e: MessageEvent) => {
+          const msg = e.data;
+          if (msg.type === 'progress') {
+            setProgress(msg.progress);
+          } else if (msg.type === 'result') {
+            worker.terminate();
+            workerRef.current = null;
+            resolve(msg.readings);
+          } else if (msg.type === 'error') {
+            worker.terminate();
+            workerRef.current = null;
+            reject(new Error(msg.message));
+          }
+        };
+
+        worker.onerror = (e) => {
+          worker.terminate();
+          workerRef.current = null;
+          reject(new Error(e.message || 'Worker error'));
+        };
+
+        worker.postMessage({ type: 'parse', content });
+      });
+
       if (readings.length === 0) {
         throw new Error('No valid battery readings found in file');
       }
-      
+
       setProgress(100);
       await new Promise(resolve => setTimeout(resolve, 300));
-      
+
       onDataParsed(readings);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to parse CSV file');
@@ -52,8 +86,8 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
       return;
     }
     
-    if (file.size > 10 * 1024 * 1024) {
-      setError('File size must be less than 10MB');
+    if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+      setError(`File size must be less than ${MAX_FILE_SIZE_MB}MB`);
       return;
     }
     
@@ -108,7 +142,7 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
                 <FileText size={16} />
                 <span>CSV format required</span>
               </div>
-              <span>Maximum file size: 10MB</span>
+              <span>Maximum file size: {MAX_FILE_SIZE_MB}MB</span>
             </div>
             
             <input
