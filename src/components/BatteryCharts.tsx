@@ -9,6 +9,33 @@ interface BatteryChartsProps {
   temperatureUnit: TemperatureUnit;
 }
 
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: any[];
+  label?: number;
+  temperatureUnit: TemperatureUnit;
+}
+
+const formatTooltipLabel = (label: number) => {
+  return format(new Date(label), 'MMM dd, HH:mm');
+};
+
+export const CustomTooltip = ({ active, payload, label, temperatureUnit }: CustomTooltipProps) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
+        <p className="font-medium">{formatTooltipLabel(label!)}</p>
+        {payload.map((entry: any, index: number) => (
+          <p key={index} style={{ color: entry.color }}>
+            {entry.name === 'displayTemperature' ? 'temperature' : entry.name}: {entry.value.toFixed(2)}{entry.name === 'voltage' ? 'V' : `°${temperatureUnit}`}
+          </p>
+        ))}
+      </div>
+    );
+  }
+  return null;
+};
+
 export function BatteryCharts({ readings, temperatureUnit }: BatteryChartsProps) {
   const celsiusToFahrenheit = (celsius: number) => (celsius * 9/5) + 32;
 
@@ -22,26 +49,6 @@ export function BatteryCharts({ readings, temperatureUnit }: BatteryChartsProps)
     time: new Date(reading.timestamp).getTime(),
     formattedTime: format(new Date(reading.timestamp), 'HH:mm')
   }));
-
-  const formatTooltipLabel = (label: number) => {
-    return format(new Date(label), 'MMM dd, HH:mm');
-  };
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-card border border-border rounded-lg p-3 shadow-lg">
-          <p className="font-medium">{formatTooltipLabel(label)}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} style={{ color: entry.color }}>
-              {entry.name === 'displayTemperature' ? 'temperature' : entry.name}: {entry.value.toFixed(2)}{entry.name === 'voltage' ? 'V' : `°${temperatureUnit}`}
-            </p>
-          ))}
-        </div>
-      );
-    }
-    return null;
-  };
 
   const optimalTemp = convertTemperature(25);
   const highTemp = convertTemperature(35);
@@ -71,7 +78,7 @@ export function BatteryCharts({ readings, temperatureUnit }: BatteryChartsProps)
                   stroke="oklch(0.5 0.03 240)"
                   tickFormatter={(value) => `${value}V`}
                 />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip temperatureUnit={temperatureUnit} />} />
                 <ReferenceLine y={12} stroke="oklch(0.75 0.12 200)" strokeDasharray="2 2" />
                 <ReferenceLine y={10.5} stroke="oklch(0.6 0.2 25)" strokeDasharray="2 2" />
                 <Line 
@@ -121,7 +128,7 @@ export function BatteryCharts({ readings, temperatureUnit }: BatteryChartsProps)
                   stroke="oklch(0.5 0.03 240)"
                   tickFormatter={(value) => `${value}°${temperatureUnit}`}
                 />
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip temperatureUnit={temperatureUnit} />} />
                 <ReferenceLine y={optimalTemp} stroke="oklch(0.75 0.12 200)" strokeDasharray="2 2" />
                 <ReferenceLine y={highTemp} stroke="oklch(0.6 0.2 25)" strokeDasharray="2 2" />
                 <Line 
