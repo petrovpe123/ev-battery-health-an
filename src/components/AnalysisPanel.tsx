@@ -25,20 +25,34 @@ export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }:
   };
 
   useEffect(() => {
+    let isActive = true;
+    let delayTimeoutId: ReturnType<typeof setTimeout> | null = null;
+
     const runAnalysis = async () => {
       setLoading(true);
       setError(null);
       
       try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise<void>(resolve => {
+          delayTimeoutId = setTimeout(() => {
+            delayTimeoutId = null;
+            resolve();
+          }, 1000);
+        });
+        if (!isActive) return;
+
         const result = await generateAIAnalysis(readings);
+        if (!isActive) return;
+
         setAnalysis(result);
         if (onAnalysisComplete) {
           onAnalysisComplete(result);
         }
       } catch (err) {
+        if (!isActive) return;
         setError(err instanceof Error ? err.message : 'Analysis failed');
       } finally {
+        if (!isActive) return;
         setLoading(false);
       }
     };
@@ -46,6 +60,13 @@ export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }:
     if (readings.length > 0) {
       runAnalysis();
     }
+
+    return () => {
+      isActive = false;
+      if (delayTimeoutId !== null) {
+        clearTimeout(delayTimeoutId);
+      }
+    };
   }, [readings, onAnalysisComplete]);
 
   const getHealthColor = (score: number) => {
