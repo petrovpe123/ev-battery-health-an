@@ -1,40 +1,69 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BatteryChargingVertical, Sparkle, TrendUp, TrendDown } from '@phosphor-icons/react';
+import { BatteryChargingVertical, Sparkle, TrendUp, Printer } from '@phosphor-icons/react';
 import { BatteryAnalysis, BatteryReading } from '@/lib/types';
 import { generateAIAnalysis } from '@/lib/battery-analysis';
 
 interface AnalysisPanelProps {
   readings: BatteryReading[];
+  fileName?: string;
 }
 
-export function AnalysisPanel({ readings }: AnalysisPanelProps) {
+export function AnalysisPanel({ readings, fileName }: AnalysisPanelProps) {
   const [analysis, setAnalysis] = useState<BatteryAnalysis | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [analysisDate, setAnalysisDate] = useState<Date | null>(null);
 
   useEffect(() => {
+    let cancelled = false;
+
     const runAnalysis = async () => {
-      setLoading(true);
-      setError(null);
+      if (!cancelled) {
+        setLoading(true);
+        setError(null);
+      }
       
       try {
         await new Promise(resolve => setTimeout(resolve, 1000));
+
+        if (cancelled) {
+          return;
+        }
+
         const result = await generateAIAnalysis(readings);
+
+        if (cancelled) {
+          return;
+        }
+
         setAnalysis(result);
+        setAnalysisDate(new Date());
       } catch (err) {
+        if (cancelled) {
+          return;
+        }
+
         setError(err instanceof Error ? err.message : 'Analysis failed');
+        setAnalysisDate(null);
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     if (readings.length > 0) {
       runAnalysis();
     }
+
+    return () => {
+      cancelled = true;
+    };
   }, [readings]);
 
   const getHealthColor = (score: number) => {
@@ -48,6 +77,10 @@ export function AnalysisPanel({ readings }: AnalysisPanelProps) {
     if (score >= 60) return 'Good';
     if (score >= 40) return 'Fair';
     return 'Poor';
+  };
+
+  const handleExportReport = () => {
+    window.print();
   };
 
   if (loading) {
@@ -99,6 +132,14 @@ export function AnalysisPanel({ readings }: AnalysisPanelProps) {
 
   return (
     <div className="space-y-6">
+      <div className="no-print flex justify-end">
+        <Button onClick={handleExportReport} className="gap-2">
+          <Printer size={16} />
+          Export Report
+        </Button>
+      </div>
+
+      <div className="report-print-area space-y-6">
       {/* Health Score */}
       <Card>
         <CardHeader>
@@ -201,6 +242,16 @@ export function AnalysisPanel({ readings }: AnalysisPanelProps) {
           </ul>
         </CardContent>
       </Card>
+
+      <Card>
+        <CardContent className="pt-6">
+          <p className="text-xs text-muted-foreground">
+            Report note: Source file {fileName || 'Unknown CSV file'} • Analysis date{' '}
+            {analysisDate ? analysisDate.toLocaleString() : new Date().toLocaleString()}
+          </p>
+        </CardContent>
+      </Card>
+      </div>
     </div>
   );
 }

@@ -11,16 +11,19 @@ import { Car, ArrowClockwise } from '@phosphor-icons/react';
 
 function App() {
   const [batteryData, setBatteryData] = useKV<BatteryReading[]>('battery-data', []);
+  const [batteryFileName, setBatteryFileName] = useKV<string>('battery-file-name', '');
   const [currentData, setCurrentData] = useState<BatteryReading[]>([]);
 
-  const handleDataParsed = (readings: BatteryReading[]) => {
+  const handleDataParsed = (readings: BatteryReading[], fileName?: string) => {
     setCurrentData(readings);
     setBatteryData(readings);
+    setBatteryFileName(fileName || '');
   };
 
   const handleReset = () => {
     setCurrentData([]);
     setBatteryData([]);
+    setBatteryFileName('');
   };
 
   const hasData = currentData.length > 0 || (batteryData && batteryData.length > 0);
@@ -109,7 +112,7 @@ function App() {
             {/* Analysis */}
             <div>
               <h2 className="text-xl font-semibold mb-4">Battery Health Analysis</h2>
-              <AnalysisPanel readings={displayData} />
+              <AnalysisPanel readings={displayData} fileName={batteryFileName} />
             </div>
 
             {/* Upload New Data */}

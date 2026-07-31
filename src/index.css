@@ -90,3 +90,26 @@
   from { width: 0; }
   to { width: 100%; }
 }
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .report-print-area,
+  .report-print-area * {
+    visibility: visible;
+  }
+
+  .report-print-area {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 1rem;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+}

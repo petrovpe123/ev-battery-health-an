@@ -8,11 +8,14 @@ interface BatteryChartsProps {
   readings: BatteryReading[];
 }
 
+const LOW_VOLTAGE_ANOMALY_THRESHOLD = 10.5;
+
 export function BatteryCharts({ readings }: BatteryChartsProps) {
   const chartData = readings.map(reading => ({
     ...reading,
     time: new Date(reading.timestamp).getTime(),
-    formattedTime: format(new Date(reading.timestamp), 'HH:mm')
+    formattedTime: format(new Date(reading.timestamp), 'HH:mm'),
+    isVoltageAnomaly: reading.voltage < LOW_VOLTAGE_ANOMALY_THRESHOLD
   }));
 
   const formatTooltipLabel = (label: number) => {
@@ -27,6 +30,7 @@ export function BatteryCharts({ readings }: BatteryChartsProps) {
           {payload.map((entry: any, index: number) => (
             <p key={index} style={{ color: entry.color }}>
               {entry.name}: {entry.value.toFixed(2)}{entry.name === 'voltage' ? 'V' : '°C'}
+              {entry.name === 'voltage' && entry.payload?.isVoltageAnomaly ? ' (Anomaly)' : ''}
             </p>
           ))}
         </div>
@@ -62,13 +66,21 @@ export function BatteryCharts({ readings }: BatteryChartsProps) {
                 />
                 <Tooltip content={<CustomTooltip />} />
                 <ReferenceLine y={12} stroke="oklch(0.75 0.12 200)" strokeDasharray="2 2" />
-                <ReferenceLine y={10.5} stroke="oklch(0.6 0.2 25)" strokeDasharray="2 2" />
+                <ReferenceLine y={LOW_VOLTAGE_ANOMALY_THRESHOLD} stroke="oklch(0.6 0.2 25)" strokeDasharray="2 2" />
                 <Line 
                   type="monotone" 
                   dataKey="voltage" 
                   stroke="oklch(0.45 0.15 240)" 
                   strokeWidth={2}
-                  dot={{ fill: 'oklch(0.45 0.15 240)', r: 3 }}
+                  dot={(props: any) => {
+                    const isVoltageAnomaly = props?.payload?.isVoltageAnomaly;
+
+                    if (isVoltageAnomaly) {
+                      return <circle cx={props.cx} cy={props.cy} r={5} fill="oklch(0.57 0.22 27)" stroke="white" strokeWidth={2} />;
+                    }
+
+                    return <circle cx={props.cx} cy={props.cy} r={3} fill="oklch(0.45 0.15 240)" />;
+                  }}
                   activeDot={{ r: 5, fill: 'oklch(0.75 0.12 200)' }}
                 />
               </LineChart>
@@ -81,7 +93,11 @@ export function BatteryCharts({ readings }: BatteryChartsProps) {
             </div>
             <div className="flex items-center gap-2">
               <div className="w-3 h-0.5 bg-destructive"></div>
-              <span>Low (10.5V)</span>
+              <span>Low ({LOW_VOLTAGE_ANOMALY_THRESHOLD}V)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-destructive"></div>
+              <span>Anomaly (&lt;{LOW_VOLTAGE_ANOMALY_THRESHOLD}V)</span>
             </div>
           </div>
         </CardContent>

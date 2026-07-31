@@ -8,7 +8,7 @@ import { BatteryReading } from '@/lib/types';
 import { parseCSV } from '@/lib/battery-analysis';
 
 interface FileUploadProps {
-  onDataParsed: (readings: BatteryReading[]) => void;
+  onDataParsed: (readings: BatteryReading[], fileName?: string) => void;
 }
 
 export function FileUpload({ onDataParsed }: FileUploadProps) {
@@ -37,7 +37,7 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
       setProgress(100);
       await new Promise(resolve => setTimeout(resolve, 300));
       
-      onDataParsed(readings);
+      onDataParsed(readings, file.name);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to parse CSV file');
     } finally {

@@ -4,6 +4,13 @@ export interface BatteryReading {
   temperature: number;
 }
 
+export interface BatterySession {
+  id: string;
+  name: string;
+  uploadedAt: string;
+  readings: BatteryReading[];
+}
+
 export interface BatteryAnalysis {
   healthScore: number;
   summary: string;
@@ -14,4 +21,18 @@ export interface BatteryAnalysis {
   temperatureRange: { min: number; max: number };
   dataPoints: number;
   timeSpan: string;
+}
+
+export interface AnalysisSnapshot {
+  id: string;
+  timestamp: string;
+  fileName?: string;
+  analysis: BatteryAnalysis;
+  readings: BatteryReading[];
+}
+
+export interface HealthTrend {
+  date: string;
+  healthScore: number;
+  fileName: string;
 }
