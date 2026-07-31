@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BatteryChargingVertical, Sparkle, TrendUp, TrendDown } from '@phosphor-icons/react';
+import { BatteryChargingVertical, Sparkle, TrendUp } from '@phosphor-icons/react';
 import { BatteryAnalysis, BatteryReading, TemperatureUnit } from '@/lib/types';
 import { generateAIAnalysis } from '@/lib/battery-analysis';
 
@@ -25,6 +25,8 @@ export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }:
   };
 
   useEffect(() => {
+    let cancelled = false;
+
     const runAnalysis = async () => {
       setLoading(true);
       setError(null);
@@ -32,21 +34,33 @@ export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }:
       try {
         await new Promise(resolve => setTimeout(resolve, 1000));
         const result = await generateAIAnalysis(readings);
+        if (cancelled) {
+          return;
+        }
         setAnalysis(result);
         if (onAnalysisComplete) {
           onAnalysisComplete(result);
         }
       } catch (err) {
+        if (cancelled) {
+          return;
+        }
         setError(err instanceof Error ? err.message : 'Analysis failed');
       } finally {
-        setLoading(false);
+        if (!cancelled) {
+          setLoading(false);
+        }
       }
     };
 
     if (readings.length > 0) {
       runAnalysis();
     }
-  }, [readings, onAnalysisComplete]);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [readings]);
 
   const getHealthColor = (score: number) => {
     if (score >= 80) return 'bg-green-500';
