@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
 import { BatteryReading, TemperatureUnit } from '@/lib/types';
@@ -9,6 +9,24 @@ interface BatteryChartsProps {
   temperatureUnit: TemperatureUnit;
 }
 
+const MAX_CHART_POINTS = 500;
+const DOT_RENDER_THRESHOLD = 200;
+
+function sampleReadings(readings: BatteryReading[], maxPoints: number): BatteryReading[] {
+  if (readings.length <= maxPoints || maxPoints < 2) {
+    return readings;
+  }
+
+  const step = (readings.length - 1) / (maxPoints - 1);
+  const sampled: BatteryReading[] = [];
+
+  for (let i = 0; i < maxPoints; i++) {
+    sampled.push(readings[Math.round(i * step)]);
+  }
+
+  return sampled;
+}
+
 export function BatteryCharts({ readings, temperatureUnit }: BatteryChartsProps) {
   const celsiusToFahrenheit = (celsius: number) => (celsius * 9/5) + 32;
 
@@ -16,12 +34,21 @@ export function BatteryCharts({ readings, temperatureUnit }: BatteryChartsProps)
     return temperatureUnit === 'C' ? celsius : celsiusToFahrenheit(celsius);
   };
 
-  const chartData = readings.map(reading => ({
-    ...reading,
-    displayTemperature: convertTemperature(reading.temperature),
-    time: new Date(reading.timestamp).getTime(),
-    formattedTime: format(new Date(reading.timestamp), 'HH:mm')
-  }));
+  const sampledReadings = useMemo(
+    () => sampleReadings(readings, MAX_CHART_POINTS),
+    [readings]
+  );
+
+  const chartData = useMemo(() => (
+    sampledReadings.map(reading => ({
+      ...reading,
+      displayTemperature: convertTemperature(reading.temperature),
+      time: new Date(reading.timestamp).getTime(),
+      formattedTime: format(new Date(reading.timestamp), 'HH:mm')
+    }))
+  ), [sampledReadings, temperatureUnit]);
+
+  const showDots = chartData.length <= DOT_RENDER_THRESHOLD;
 
   const formatTooltipLabel = (label: number) => {
     return format(new Date(label), 'MMM dd, HH:mm');
@@ -79,7 +106,7 @@ export function BatteryCharts({ readings, temperatureUnit }: BatteryChartsProps)
                   dataKey="voltage" 
                   stroke="oklch(0.45 0.15 240)" 
                   strokeWidth={2}
-                  dot={{ fill: 'oklch(0.45 0.15 240)', r: 3 }}
+                  dot={showDots ? { fill: 'oklch(0.45 0.15 240)', r: 3 } : false}
                   activeDot={{ r: 5, fill: 'oklch(0.75 0.12 200)' }}
                 />
               </LineChart>
@@ -129,7 +156,7 @@ export function BatteryCharts({ readings, temperatureUnit }: BatteryChartsProps)
                   dataKey="displayTemperature" 
                   stroke="oklch(0.6 0.18 45)" 
                   strokeWidth={2}
-                  dot={{ fill: 'oklch(0.6 0.18 45)', r: 3 }}
+                  dot={showDots ? { fill: 'oklch(0.6 0.18 45)', r: 3 } : false}
                   activeDot={{ r: 5, fill: 'oklch(0.75 0.12 200)' }}
                 />
               </LineChart>
