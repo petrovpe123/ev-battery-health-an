@@ -11,6 +11,7 @@ import { BatteryReading, TemperatureUnit, BatteryAnalysis } from '@/lib/types';
 import { Car, ArrowClockwise, Thermometer, FilePdf } from '@phosphor-icons/react';
 import { generatePDFReport } from '@/lib/pdf-export';
 import { toast } from 'sonner';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 function App() {
   const [batteryData, setBatteryData] = useKV<BatteryReading[]>('battery-data', []);
@@ -64,9 +65,9 @@ function App() {
   return (
     <div className="min-h-screen bg-background">
       <Toaster />
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex flex-col gap-4 mb-8 lg:flex-row lg:items-center lg:justify-between">
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-50 bg-background border-b">
+        <div className="container mx-auto px-4 py-3 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10">
               <Car size={24} className="text-primary" />
@@ -78,8 +79,9 @@ function App() {
               </p>
             </div>
           </div>
-          
+
           <div className="flex items-center gap-2 flex-shrink-0">
+            <ThemeToggle />
             {hasData && (
               <Button 
                 onClick={toggleTemperatureUnit} 
@@ -108,6 +110,8 @@ function App() {
             )}
           </div>
         </div>
+      </header>
+      <div className="container mx-auto px-4 py-8">
 
         {/* Main Content */}
         {!hasData ? (
