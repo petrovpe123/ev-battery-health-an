@@ -15,3 +15,17 @@ export interface BatteryAnalysis {
   dataPoints: number;
   timeSpan: string;
 }
+
+export interface AnalysisSnapshot {
+  id: string;
+  timestamp: string;
+  fileName?: string;
+  analysis: BatteryAnalysis;
+  readings: BatteryReading[];
+}
+
+export interface HealthTrend {
+  date: string;
+  healthScore: number;
+  fileName: string;
+}
