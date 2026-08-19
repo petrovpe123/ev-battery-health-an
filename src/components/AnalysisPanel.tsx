@@ -46,9 +46,9 @@ export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }:
           onAnalysisComplete(result);
         }
       } catch (err) {
-        if (!isActive) return;
-
-        setError(err instanceof Error ? err.message : 'Analysis failed');
+        if (isActive) {
+          setError(err instanceof Error ? err.message : 'Analysis failed');
+        }
       } finally {
         if (isActive) {
           setLoading(false);
