@@ -1,5 +1,10 @@
 import { BatteryReading, BatteryAnalysis } from './types';
 
+const MIN_VOLTAGE = 7;
+const MAX_VOLTAGE = 16;
+const MIN_TEMPERATURE = -50;
+const MAX_TEMPERATURE = 80;
+
 export function parseCSV(csvContent: string): BatteryReading[] {
   const lines = csvContent.trim().split('\n');
   const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
@@ -22,7 +27,14 @@ export function parseCSV(csvContent: string): BatteryReading[] {
       const voltage = parseFloat(values[voltageIndex]);
       const temperature = parseFloat(values[temperatureIndex]);
       
-      if (!isNaN(voltage) && !isNaN(temperature)) {
+      if (
+        !isNaN(voltage) &&
+        !isNaN(temperature) &&
+        voltage >= MIN_VOLTAGE &&
+        voltage <= MAX_VOLTAGE &&
+        temperature >= MIN_TEMPERATURE &&
+        temperature <= MAX_TEMPERATURE
+      ) {
         readings.push({
           timestamp,
           voltage,
