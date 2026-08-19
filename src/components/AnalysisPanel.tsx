@@ -50,9 +50,9 @@ export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }:
 
         setError(err instanceof Error ? err.message : 'Analysis failed');
       } finally {
-        if (!isActive) return;
-
-        setLoading(false);
+        if (isActive) {
+          setLoading(false);
+        }
       }
     };
 
