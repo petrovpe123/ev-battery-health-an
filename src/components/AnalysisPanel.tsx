@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BatteryChargingVertical, Sparkle, TrendUp, TrendDown } from '@phosphor-icons/react';
@@ -15,8 +16,9 @@ interface AnalysisPanelProps {
 
 export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }: AnalysisPanelProps) {
   const [analysis, setAnalysis] = useState<BatteryAnalysis | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [consentGranted, setConsentGranted] = useState(false);
 
   const celsiusToFahrenheit = (celsius: number) => (celsius * 9/5) + 32;
 
@@ -30,7 +32,6 @@ export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }:
       setError(null);
       
       try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
         const result = await generateAIAnalysis(readings);
         setAnalysis(result);
         if (onAnalysisComplete) {
@@ -43,10 +44,10 @@ export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }:
       }
     };
 
-    if (readings.length > 0) {
+    if (readings.length > 0 && consentGranted) {
       runAnalysis();
     }
-  }, [readings, onAnalysisComplete]);
+  }, [readings, onAnalysisComplete, consentGranted]);
 
   const getHealthColor = (score: number) => {
     if (score >= 80) return 'bg-green-500';
@@ -60,6 +61,28 @@ export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }:
     if (score >= 40) return 'Fair';
     return 'Poor';
   };
+
+  if (!consentGranted) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkle size={20} />
+            AI Analysis Consent
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            AI analysis is performed through a secure backend endpoint. Telemetry is sent only after consent,
+            provider credentials stay server-side, and the backend minimizes provider payloads to statistics plus capped samples.
+          </p>
+          <Button onClick={() => setConsentGranted(true)}>
+            Analyze with secure backend
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (loading) {
     return (

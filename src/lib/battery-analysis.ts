@@ -68,40 +68,103 @@ export function calculateBasicStats(readings: BatteryReading[]) {
   };
 }
 
+function generateFallbackAnalysis(readings: BatteryReading[], reason?: string): BatteryAnalysis {
+  const stats = calculateBasicStats(readings);
+  if (!stats) {
+    throw new Error('No valid data to analyze');
+  }
+
+  const voltageSpread = stats.voltageRange.max - stats.voltageRange.min;
+  const temperatureSpread = stats.temperatureRange.max - stats.temperatureRange.min;
+  const voltagePenalty = Math.min(30, voltageSpread * 10);
+  const temperaturePenalty = Math.min(20, temperatureSpread / 2);
+  const rangePenalty = stats.avgVoltage < 10 || stats.avgVoltage > 14 ? 20 : 0;
+  const healthScore = Math.max(0, Math.min(100, Math.round(90 - voltagePenalty - temperaturePenalty - rangePenalty)));
+
+  return {
+    ...stats,
+    healthScore,
+    summary: reason
+      ? `Secure AI analysis was unavailable (${reason}). This fallback assessment is based on local voltage and temperature statistics.`
+      : 'Battery telemetry was assessed using local voltage and temperature statistics.',
+    recommendations: [
+      'Monitor voltage stability across future telemetry uploads',
+      'Keep battery temperature near the 15-25°C optimal range when possible',
+      'Use the secured AI analysis endpoint for a richer diagnostic summary when authorized'
+    ]
+  };
+}
+
+function validateAnalysisResponse(value: unknown, readings: BatteryReading[]): BatteryAnalysis {
+  if (!value || typeof value !== 'object' || !('analysis' in value)) {
+    return generateFallbackAnalysis(readings, 'invalid response');
+  }
+
+  const analysis = (value as { analysis: Partial<BatteryAnalysis> }).analysis;
+  const stats = calculateBasicStats(readings);
+  if (!stats) {
+    throw new Error('No valid data to analyze');
+  }
+
+  return {
+    ...stats,
+    healthScore: typeof analysis.healthScore === 'number'
+      ? Math.max(0, Math.min(100, Math.round(analysis.healthScore)))
+      : 75,
+    summary: typeof analysis.summary === 'string' && analysis.summary.trim()
+      ? analysis.summary.trim()
+      : 'Battery appears to be operating within normal parameters.',
+    recommendations: Array.isArray(analysis.recommendations) && analysis.recommendations.length > 0
+      ? analysis.recommendations.filter((recommendation): recommendation is string => typeof recommendation === 'string').slice(0, 5)
+      : ['Monitor voltage stability', 'Keep battery cool', 'Regular maintenance checks']
+  };
+}
+
+function getAnalysisAuthorizationHeader(): string | undefined {
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+
+  const token = window.sessionStorage.getItem('analysisApiToken');
+  return token ? 'Bearer ' + token : undefined;
+}
+
 export async function generateAIAnalysis(readings: BatteryReading[]): Promise<BatteryAnalysis> {
   const stats = calculateBasicStats(readings);
   if (!stats) {
     throw new Error('No valid data to analyze');
   }
-  
-  const sampleReadings = readings.slice(0, 10).map(r => `${r.timestamp}: ${r.voltage}V, ${r.temperature}°C`).join('\n');
-  
-  const promptText = `Analyze this EV battery telemetry data and provide a comprehensive health assessment:
-    
-    Data Summary:
-    - ${stats.dataPoints} readings over ${stats.timeSpan}
-    - Average voltage: ${stats.avgVoltage.toFixed(2)}V (range: ${stats.voltageRange.min.toFixed(2)}V - ${stats.voltageRange.max.toFixed(2)}V)
-    - Average temperature: ${stats.avgTemperature.toFixed(1)}°C (range: ${stats.temperatureRange.min.toFixed(1)}°C - ${stats.temperatureRange.max.toFixed(1)}°C)
-    
-    Sample readings:
-    ${sampleReadings}
-    
-    Please provide a JSON response with exactly this structure:
-    {
-      "healthScore": <number 0-100>,
-      "summary": "<brief technical summary>",
-      "recommendations": ["<recommendation 1>", "<recommendation 2>", "<recommendation 3>"]
-    }
-    
-    Focus on voltage stability, temperature patterns, and any concerning trends. Consider typical EV battery operating ranges (10-14V, optimal temp 15-25°C).`;
-  
-  const response = await window.spark.llm(promptText, "gpt-4o", true);
-  const aiResult = JSON.parse(response);
-  
-  return {
-    ...stats,
-    healthScore: aiResult.healthScore || 75,
-    summary: aiResult.summary || 'Battery appears to be operating within normal parameters.',
-    recommendations: aiResult.recommendations || ['Monitor voltage stability', 'Keep battery cool', 'Regular maintenance checks']
+
+  const authorization = getAnalysisAuthorizationHeader();
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json'
   };
+
+  if (authorization) {
+    headers.Authorization = authorization;
+  }
+
+  try {
+    const response = await fetch('/api/ai-analysis', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers,
+      body: JSON.stringify({
+        consentToSendTelemetry: true,
+        telemetryPolicyVersion: '2026-08-20',
+        readings
+      })
+    });
+
+    if (!response.ok) {
+      const message = response.status === 401 || response.status === 403
+        ? 'authorization required'
+        : 'secure endpoint unavailable';
+      return generateFallbackAnalysis(readings, message);
+    }
+
+    return validateAnalysisResponse(await response.json(), readings);
+  } catch {
+    return generateFallbackAnalysis(readings, 'secure endpoint unavailable');
+  }
 }
