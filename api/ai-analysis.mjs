@@ -60,13 +60,16 @@ function getCookieValue(headers, name) {
 }
 
 function secureCompare(a, b) {
-  const aHash = createHash('sha256').update(a).digest();
-  const bHash = createHash('sha256').update(b).digest();
-  return timingSafeEqual(aHash, bHash);
-}
+  const aBuffer = Buffer.from(a);
+  const bBuffer = Buffer.from(b);
+  const length = Math.max(aBuffer.length, bBuffer.length);
+  const aPadded = Buffer.alloc(length);
+  const bPadded = Buffer.alloc(length);
 
-function credentialId(value) {
-  return createHash('sha256').update(value).digest('hex');
+  aBuffer.copy(aPadded);
+  bBuffer.copy(bPadded);
+
+  return timingSafeEqual(aPadded, bPadded) && aBuffer.length === bBuffer.length;
 }
 
 function authorize(headers, env) {
@@ -80,11 +83,11 @@ function authorize(headers, env) {
   }
 
   if (configuredBearer && bearerToken && secureCompare(bearerToken, configuredBearer)) {
-    return `bearer:${credentialId(bearerToken)}`;
+    return 'bearer';
   }
 
   if (configuredSessionCookie && sessionCookie && secureCompare(sessionCookie, configuredSessionCookie)) {
-    return `cookie:${credentialId(sessionCookie)}`;
+    return 'cookie';
   }
 
   throw new SafeHttpError(401, 'Authentication is required for AI analysis.');
