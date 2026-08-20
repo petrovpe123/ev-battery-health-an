@@ -65,6 +65,10 @@ function secureCompare(a, b) {
   return timingSafeEqual(aHash, bHash);
 }
 
+function credentialId(value) {
+  return createHash('sha256').update(value).digest('hex');
+}
+
 function authorize(headers, env) {
   const configuredBearer = env.ANALYSIS_API_TOKEN;
   const configuredSessionCookie = env.ANALYSIS_SESSION_COOKIE;
@@ -76,11 +80,11 @@ function authorize(headers, env) {
   }
 
   if (configuredBearer && bearerToken && secureCompare(bearerToken, configuredBearer)) {
-    return `bearer:${bearerToken}`;
+    return `bearer:${credentialId(bearerToken)}`;
   }
 
   if (configuredSessionCookie && sessionCookie && secureCompare(sessionCookie, configuredSessionCookie)) {
-    return `cookie:${sessionCookie}`;
+    return `cookie:${credentialId(sessionCookie)}`;
   }
 
   throw new SafeHttpError(401, 'Authentication is required for AI analysis.');
@@ -95,6 +99,13 @@ function getClientKey(authIdentity, request) {
 function enforceRateLimit(clientKey, env, now = Date.now()) {
   const maxRequests = getEnvNumber(env, 'AI_ANALYSIS_RATE_LIMIT', DEFAULT_RATE_LIMIT);
   const windowMs = getEnvNumber(env, 'AI_ANALYSIS_RATE_WINDOW_MS', DEFAULT_RATE_WINDOW_MS);
+
+  for (const [key, value] of rateLimitStore.entries()) {
+    if (value.resetAt <= now) {
+      rateLimitStore.delete(key);
+    }
+  }
+
   const current = rateLimitStore.get(clientKey);
 
   if (!current || current.resetAt <= now) {

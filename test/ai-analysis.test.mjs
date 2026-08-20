@@ -96,6 +96,19 @@ test('rejects over-limit requests before calling the provider', async () => {
   assert.equal(providerCalls, 2);
 });
 
+test('removes expired rate-limit entries', async () => {
+  rateLimitStore.set('expired-client', { count: 1, resetAt: Date.now() - 1 });
+
+  const response = await handleAnalysisRequest(
+    makeRequest(),
+    baseEnv,
+    successfulProviderFetch()
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(rateLimitStore.has('expired-client'), false);
+});
+
 test('rejects requests that exceed body or telemetry limits', async () => {
   const limitEnv = {
     ...baseEnv,
