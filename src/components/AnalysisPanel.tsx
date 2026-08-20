@@ -40,7 +40,12 @@ export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }:
 
         setAnalysis(result);
         if (onAnalysisComplete) {
-          onAnalysisComplete(result);
+          try {
+            onAnalysisComplete(result);
+          } catch (callbackErr) {
+            // Log callback error but don't let it break the analysis display
+            console.error('Error in onAnalysisComplete callback:', callbackErr);
+          }
         }
       } catch (err) {
         if (!mounted) return;
