@@ -25,27 +25,42 @@ export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }:
   };
 
   useEffect(() => {
+    let mounted = true;
+
     const runAnalysis = async () => {
+      if (!mounted) return;
+
       setLoading(true);
       setError(null);
       
       try {
         await new Promise(resolve => setTimeout(resolve, 1000));
+        if (!mounted) return;
+
         const result = await generateAIAnalysis(readings);
+        if (!mounted) return;
+
         setAnalysis(result);
         if (onAnalysisComplete) {
           onAnalysisComplete(result);
         }
       } catch (err) {
+        if (!mounted) return;
         setError(err instanceof Error ? err.message : 'Analysis failed');
       } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     if (readings.length > 0) {
       runAnalysis();
     }
+
+    return () => {
+      mounted = false;
+    };
   }, [readings, onAnalysisComplete]);
 
   const getHealthColor = (score: number) => {
