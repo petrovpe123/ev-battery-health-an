@@ -3,15 +3,20 @@ import { useKV } from '@github/spark/hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Toaster } from '@/components/ui/sonner';
 import { FileUpload } from '@/components/FileUpload';
 import { BatteryCharts } from '@/components/BatteryCharts';
 import { AnalysisPanel } from '@/components/AnalysisPanel';
-import { BatteryReading } from '@/lib/types';
-import { Car, ArrowClockwise } from '@phosphor-icons/react';
+import { BatteryReading, TemperatureUnit, BatteryAnalysis } from '@/lib/types';
+import { Car, ArrowClockwise, Thermometer, FilePdf } from '@phosphor-icons/react';
+import { generatePDFReport } from '@/lib/pdf-export';
+import { toast } from 'sonner';
 
 function App() {
   const [batteryData, setBatteryData] = useKV<BatteryReading[]>('battery-data', []);
   const [currentData, setCurrentData] = useState<BatteryReading[]>([]);
+  const [temperatureUnit, setTemperatureUnit] = useKV<TemperatureUnit>('temperature-unit', 'C');
+  const [currentAnalysis, setCurrentAnalysis] = useState<BatteryAnalysis | null>(null);
 
   const handleDataParsed = (readings: BatteryReading[]) => {
     setCurrentData(readings);
@@ -26,11 +31,42 @@ function App() {
   const hasData = currentData.length > 0 || (batteryData && batteryData.length > 0);
   const displayData = currentData.length > 0 ? currentData : (batteryData || []);
 
+  const toggleTemperatureUnit = () => {
+    setTemperatureUnit((current) => current === 'C' ? 'F' : 'C');
+  };
+
+  const celsiusToFahrenheit = (celsius: number) => (celsius * 9/5) + 32;
+
+  const getAvgTemperature = () => {
+    const avgCelsius = displayData.reduce((sum, r) => sum + r.temperature, 0) / displayData.length;
+    return temperatureUnit === 'C' ? avgCelsius : celsiusToFahrenheit(avgCelsius);
+  };
+
+  const handleExportPDF = () => {
+    if (!currentAnalysis) {
+      toast.error('Analysis not available yet. Please wait for the analysis to complete.');
+      return;
+    }
+
+    try {
+      generatePDFReport({
+        readings: displayData,
+        analysis: currentAnalysis,
+        temperatureUnit: temperatureUnit || 'C'
+      });
+      toast.success('PDF report downloaded successfully!');
+    } catch (error) {
+      toast.error('Failed to generate PDF report');
+      console.error('PDF generation error:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
+      <Toaster />
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex flex-col gap-4 mb-8 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10">
               <Car size={24} className="text-primary" />
@@ -43,12 +79,34 @@ function App() {
             </div>
           </div>
           
-          {hasData && (
-            <Button onClick={handleReset} variant="outline" className="gap-2">
-              <ArrowClockwise size={16} />
-              Reset
-            </Button>
-          )}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {hasData && (
+              <Button 
+                onClick={toggleTemperatureUnit} 
+                variant="outline" 
+                className="gap-2"
+              >
+                <Thermometer size={16} />
+                °{temperatureUnit}
+              </Button>
+            )}
+            {hasData && currentAnalysis && (
+              <Button 
+                onClick={handleExportPDF} 
+                variant="default" 
+                className="gap-2 relative z-10"
+              >
+                <FilePdf size={16} />
+                Export PDF
+              </Button>
+            )}
+            {hasData && (
+              <Button onClick={handleReset} variant="outline" className="gap-2">
+                <ArrowClockwise size={16} />
+                Reset
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Main Content */}
@@ -79,7 +137,7 @@ function App() {
                   </div>
                   <div className="text-center">
                     <div className="text-2xl font-bold text-primary">
-                      {(displayData.reduce((sum, r) => sum + r.temperature, 0) / displayData.length).toFixed(1)}°C
+                      {getAvgTemperature().toFixed(1)}°{temperatureUnit}
                     </div>
                     <div className="text-sm text-muted-foreground">Avg Temperature</div>
                   </div>
@@ -101,7 +159,7 @@ function App() {
             {/* Charts */}
             <div>
               <h2 className="text-xl font-semibold mb-4">Telemetry Visualization</h2>
-              <BatteryCharts readings={displayData} />
+              <BatteryCharts readings={displayData} temperatureUnit={temperatureUnit || 'C'} />
             </div>
 
             <Separator />
@@ -109,7 +167,11 @@ function App() {
             {/* Analysis */}
             <div>
               <h2 className="text-xl font-semibold mb-4">Battery Health Analysis</h2>
-              <AnalysisPanel readings={displayData} />
+              <AnalysisPanel 
+                readings={displayData} 
+                temperatureUnit={temperatureUnit || 'C'} 
+                onAnalysisComplete={setCurrentAnalysis}
+              />
             </div>
 
             {/* Upload New Data */}
