@@ -28,8 +28,6 @@ export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }:
     let mounted = true;
 
     const runAnalysis = async () => {
-      if (!mounted) return;
-
       setLoading(true);
       setError(null);
       
