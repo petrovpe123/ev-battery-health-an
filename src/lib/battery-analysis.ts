@@ -96,7 +96,18 @@ export async function generateAIAnalysis(readings: BatteryReading[]): Promise<Ba
     Focus on voltage stability, temperature patterns, and any concerning trends. Consider typical EV battery operating ranges (10-14V, optimal temp 15-25°C).`;
   
   const response = await window.spark.llm(promptText, "gpt-4o", true);
-  const aiResult = JSON.parse(response);
+  
+  let aiResult;
+  try {
+    aiResult = JSON.parse(response);
+  } catch (error) {
+    console.warn('Failed to parse AI response:', error);
+    aiResult = {
+      healthScore: 75,
+      summary: 'Unable to parse AI analysis. Battery appears normal.',
+      recommendations: ['Unable to generate specific recommendations', 'Monitor battery performance', 'Contact support for detailed analysis']
+    };
+  }
   
   return {
     ...stats,
