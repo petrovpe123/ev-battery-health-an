@@ -168,6 +168,7 @@ test('does not expose provider credentials or direct provider calls in client co
 
   assert.doesNotMatch(batteryAnalysis, /window\.spark\.llm/);
   assert.doesNotMatch(batteryAnalysis, /AI_PROVIDER_API_KEY/);
+  assert.doesNotMatch(batteryAnalysis, /consentToSendTelemetry:\s*true/);
   assert.doesNotMatch(batteryAnalysis, /VITE_.*(?:KEY|TOKEN|SECRET)/);
   assert.doesNotMatch(packageJson, /VITE_.*(?:KEY|TOKEN|SECRET)/);
 });

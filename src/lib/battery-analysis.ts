@@ -129,10 +129,17 @@ function getAnalysisAuthorizationHeader(): string | undefined {
   return token ? 'Bearer ' + token : undefined;
 }
 
-export async function generateAIAnalysis(readings: BatteryReading[]): Promise<BatteryAnalysis> {
+export async function generateAIAnalysis(
+  readings: BatteryReading[],
+  consentToSendTelemetry: boolean
+): Promise<BatteryAnalysis> {
   const stats = calculateBasicStats(readings);
   if (!stats) {
     throw new Error('No valid data to analyze');
+  }
+
+  if (!consentToSendTelemetry) {
+    return generateFallbackAnalysis(readings, 'telemetry consent not granted');
   }
 
   const authorization = getAnalysisAuthorizationHeader();
@@ -150,7 +157,7 @@ export async function generateAIAnalysis(readings: BatteryReading[]): Promise<Ba
       credentials: 'same-origin',
       headers,
       body: JSON.stringify({
-        consentToSendTelemetry: true,
+        consentToSendTelemetry,
         telemetryPolicyVersion: '2026-08-20',
         readings
       })

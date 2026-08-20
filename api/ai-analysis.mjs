@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHash, timingSafeEqual } from 'node:crypto';
 
 const DEFAULT_RATE_LIMIT = 10;
 const DEFAULT_RATE_WINDOW_MS = 60_000;
@@ -59,6 +59,12 @@ function getCookieValue(headers, name) {
   return cookie ? decodeURIComponent(cookie.slice(prefix.length)) : '';
 }
 
+function secureCompare(a, b) {
+  const aHash = createHash('sha256').update(a).digest();
+  const bHash = createHash('sha256').update(b).digest();
+  return timingSafeEqual(aHash, bHash);
+}
+
 function authorize(headers, env) {
   const configuredBearer = env.ANALYSIS_API_TOKEN;
   const configuredSessionCookie = env.ANALYSIS_SESSION_COOKIE;
@@ -69,11 +75,11 @@ function authorize(headers, env) {
     throw new SafeHttpError(503, 'AI analysis is not configured.');
   }
 
-  if (configuredBearer && bearerToken === configuredBearer) {
+  if (configuredBearer && bearerToken && secureCompare(bearerToken, configuredBearer)) {
     return `bearer:${bearerToken}`;
   }
 
-  if (configuredSessionCookie && sessionCookie === configuredSessionCookie) {
+  if (configuredSessionCookie && sessionCookie && secureCompare(sessionCookie, configuredSessionCookie)) {
     return `cookie:${sessionCookie}`;
   }
 
@@ -115,13 +121,8 @@ function parseBody(body) {
   throw new SafeHttpError(400, 'Invalid request body.');
 }
 
-function validateRequestBody(body, env, contentLength) {
-  const maxBodyBytes = getEnvNumber(env, 'AI_ANALYSIS_MAX_BODY_BYTES', DEFAULT_MAX_BODY_BYTES);
+function validateRequestBody(body, env) {
   const maxReadings = getEnvNumber(env, 'AI_ANALYSIS_MAX_READING_COUNT', DEFAULT_MAX_READING_COUNT);
-
-  if (contentLength > maxBodyBytes) {
-    throw new SafeHttpError(413, 'Telemetry request is too large.');
-  }
 
   if (!body || body.consentToSendTelemetry !== true) {
     throw new SafeHttpError(400, 'Explicit telemetry analysis consent is required.');
@@ -313,7 +314,7 @@ export async function handleAnalysisRequest(request, env = process.env, fetchImp
     enforceRateLimit(clientKey, env);
 
     const body = parseBody(request.body);
-    const readings = validateRequestBody(body, env, contentLength);
+    const readings = validateRequestBody(body, env);
     const stats = calculateBasicStats(readings);
     const prompt = buildPrompt(stats, selectProviderSamples(readings, env));
     const aiAnalysis = await callProvider(prompt, env, fetchImpl);

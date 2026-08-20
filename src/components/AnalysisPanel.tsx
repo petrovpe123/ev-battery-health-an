@@ -32,7 +32,7 @@ export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }:
       setError(null);
       
       try {
-        const result = await generateAIAnalysis(readings);
+        const result = await generateAIAnalysis(readings, consentGranted);
         setAnalysis(result);
         if (onAnalysisComplete) {
           onAnalysisComplete(result);
