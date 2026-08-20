@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useRef, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -16,6 +16,13 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const mountedRef = useRef(true);
+
+  useEffect(() => {
+    return () => {
+      mountedRef.current = false;
+    };
+  }, []);
 
   const handleFileRead = useCallback(async (file: File) => {
     setUploading(true);
@@ -24,11 +31,14 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
 
     try {
       const content = await file.text();
+      if (!mountedRef.current) return;
       
       setProgress(50);
       await new Promise(resolve => setTimeout(resolve, 500));
+      if (!mountedRef.current) return;
       
       const readings = parseCSV(content);
+      if (!mountedRef.current) return;
       
       if (readings.length === 0) {
         throw new Error('No valid battery readings found in file');
@@ -36,13 +46,17 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
       
       setProgress(100);
       await new Promise(resolve => setTimeout(resolve, 300));
+      if (!mountedRef.current) return;
       
       onDataParsed(readings);
     } catch (err) {
+      if (!mountedRef.current) return;
       setError(err instanceof Error ? err.message : 'Failed to parse CSV file');
     } finally {
-      setUploading(false);
-      setProgress(0);
+      if (mountedRef.current) {
+        setUploading(false);
+        setProgress(0);
+      }
     }
   }, [onDataParsed]);
 
