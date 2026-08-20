@@ -29,3 +29,9 @@ This information will help us triage your report more quickly.
 ## Policy
 
 See [GitHub's Safe Harbor Policy](https://docs.github.com/en/site-policy/security-policies/github-bug-bounty-program-legal-safe-harbor#1-safe-harbor-terms)
+
+## AI telemetry analysis boundary
+
+AI analysis must be requested through the server-controlled `/api/ai-analysis` endpoint. Provider API keys must be stored only in server-side secret storage such as `AI_PROVIDER_API_KEY`; do not expose provider credentials through `VITE_*` variables or client-side bundles.
+
+The endpoint requires authorization, enforces request-size and rate limits, and returns generic errors that do not disclose provider details. Battery telemetry is sent only after explicit user consent, is not retained by the endpoint, and is minimized before provider submission to aggregate statistics plus a capped representative sample.

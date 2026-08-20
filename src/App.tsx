@@ -21,11 +21,13 @@ function App() {
   const handleDataParsed = (readings: BatteryReading[]) => {
     setCurrentData(readings);
     setBatteryData(readings);
+    setCurrentAnalysis(null);
   };
 
   const handleReset = () => {
     setCurrentData([]);
     setBatteryData([]);
+    setCurrentAnalysis(null);
   };
 
   const hasData = currentData.length > 0 || (batteryData && batteryData.length > 0);
