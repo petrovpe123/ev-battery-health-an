@@ -176,6 +176,10 @@ function calculateBasicStats(readings) {
   const temperatures = readings.map((reading) => reading.temperature);
   const avgVoltage = voltages.reduce((sum, voltage) => sum + voltage, 0) / voltages.length;
   const avgTemperature = temperatures.reduce((sum, temperature) => sum + temperature, 0) / temperatures.length;
+  const minVoltage = voltages.reduce((min, voltage) => Math.min(min, voltage), Infinity);
+  const maxVoltage = voltages.reduce((max, voltage) => Math.max(max, voltage), -Infinity);
+  const minTemperature = temperatures.reduce((min, temperature) => Math.min(min, temperature), Infinity);
+  const maxTemperature = temperatures.reduce((max, temperature) => Math.max(max, temperature), -Infinity);
   const firstTime = new Date(readings[0].timestamp);
   const lastTime = new Date(readings[readings.length - 1].timestamp);
   const timeSpanHours = (lastTime.getTime() - firstTime.getTime()) / (1000 * 60 * 60);
@@ -184,12 +188,12 @@ function calculateBasicStats(readings) {
     avgVoltage,
     avgTemperature,
     voltageRange: {
-      min: Math.min(...voltages),
-      max: Math.max(...voltages)
+      min: minVoltage,
+      max: maxVoltage
     },
     temperatureRange: {
-      min: Math.min(...temperatures),
-      max: Math.max(...temperatures)
+      min: minTemperature,
+      max: maxTemperature
     },
     dataPoints: readings.length,
     timeSpan: timeSpanHours > 24 ? `${Math.round(timeSpanHours / 24)} days` : `${Math.round(timeSpanHours)} hours`
@@ -354,23 +358,40 @@ export async function handleAnalysisRequest(request, env = process.env, fetchImp
   }
 }
 
-async function readRequestBody(req) {
+async function readRequestBody(req, maxBodyBytes) {
   const chunks = [];
+  let totalBytes = 0;
 
   for await (const chunk of req) {
-    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    const buffer = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk);
+    totalBytes += buffer.byteLength;
+
+    if (totalBytes > maxBodyBytes) {
+      throw new SafeHttpError(413, 'Telemetry request is too large.');
+    }
+
+    chunks.push(buffer);
   }
 
   return Buffer.concat(chunks).toString('utf8');
 }
 
 export default async function handler(req, res) {
-  const response = await handleAnalysisRequest({
-    method: req.method,
-    headers: req.headers,
-    body: await readRequestBody(req),
-    ip: req.socket?.remoteAddress
-  });
+  let response;
+
+  try {
+    const maxBodyBytes = getEnvNumber(process.env, 'AI_ANALYSIS_MAX_BODY_BYTES', DEFAULT_MAX_BODY_BYTES);
+    response = await handleAnalysisRequest({
+      method: req.method,
+      headers: req.headers,
+      body: await readRequestBody(req, maxBodyBytes),
+      ip: req.socket?.remoteAddress
+    });
+  } catch (error) {
+    response = error instanceof SafeHttpError
+      ? json(error.status, { error: error.message })
+      : json(500, { error: 'Request processing failed.' });
+  }
 
   for (const [key, value] of Object.entries(response.headers)) {
     res.setHeader(key, value);

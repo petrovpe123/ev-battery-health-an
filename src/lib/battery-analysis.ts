@@ -1,5 +1,7 @@
 import { BatteryReading, BatteryAnalysis } from './types';
 
+const TELEMETRY_POLICY_VERSION = '2026-08-20';
+
 export function parseCSV(csvContent: string): BatteryReading[] {
   const lines = csvContent.trim().split('\n');
   const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
@@ -45,13 +47,13 @@ export function calculateBasicStats(readings: BatteryReading[]) {
   const avgTemperature = temperatures.reduce((sum, t) => sum + t, 0) / temperatures.length;
   
   const voltageRange = {
-    min: Math.min(...voltages),
-    max: Math.max(...voltages)
+    min: voltages.reduce((min, voltage) => Math.min(min, voltage), Infinity),
+    max: voltages.reduce((max, voltage) => Math.max(max, voltage), -Infinity)
   };
   
   const temperatureRange = {
-    min: Math.min(...temperatures),
-    max: Math.max(...temperatures)
+    min: temperatures.reduce((min, temperature) => Math.min(min, temperature), Infinity),
+    max: temperatures.reduce((max, temperature) => Math.max(max, temperature), -Infinity)
   };
   
   const firstTime = new Date(readings[0].timestamp);
@@ -158,7 +160,7 @@ export async function generateAIAnalysis(
       headers,
       body: JSON.stringify({
         consentToSendTelemetry,
-        telemetryPolicyVersion: '2026-08-20',
+        telemetryPolicyVersion: TELEMETRY_POLICY_VERSION,
         readings
       })
     });

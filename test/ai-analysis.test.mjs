@@ -109,6 +109,33 @@ test('removes expired rate-limit entries', async () => {
   assert.equal(rateLimitStore.has('expired-client'), false);
 });
 
+test('handles the maximum configured reading count without spread-based range errors', async () => {
+  const readings = Array.from({ length: 5_000 }, (_, index) => ({
+    timestamp: new Date(Date.UTC(2026, 7, 20, 0, 0, index)).toISOString(),
+    voltage: 12 + (index % 10) / 100,
+    temperature: 20 + (index % 5)
+  }));
+
+  const response = await handleAnalysisRequest(
+    makeRequest({
+      headers: { 'content-length': '0' },
+      body: { readings }
+    }),
+    {
+      ...baseEnv,
+      AI_ANALYSIS_MAX_BODY_BYTES: '1000000',
+      AI_ANALYSIS_MAX_READING_COUNT: '5000',
+      AI_ANALYSIS_RATE_LIMIT: '10'
+    },
+    successfulProviderFetch()
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.body.analysis.dataPoints, 5_000);
+  assert.equal(response.body.analysis.voltageRange.min, 12);
+  assert.equal(response.body.analysis.voltageRange.max, 12.09);
+});
+
 test('rejects requests that exceed body or telemetry limits', async () => {
   const limitEnv = {
     ...baseEnv,
