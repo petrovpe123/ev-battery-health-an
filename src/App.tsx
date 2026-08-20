@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useKV } from '@github/spark/hooks';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { FileUpload } from '@/components/FileUpload';
 import { BatteryCharts } from '@/components/BatteryCharts';
 import { AnalysisPanel } from '@/components/AnalysisPanel';
 import { BatteryReading, TemperatureUnit, BatteryAnalysis } from '@/lib/types';
-import { Car, ArrowClockwise, Thermometer, FilePdf } from '@phosphor-icons/react';
+import { Car, ArrowClockwise, Thermometer, FilePdf, Moon, Sun } from '@phosphor-icons/react';
 import { generatePDFReport } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 
@@ -17,6 +17,13 @@ function App() {
   const [currentData, setCurrentData] = useState<BatteryReading[]>([]);
   const [temperatureUnit, setTemperatureUnit] = useKV<TemperatureUnit>('temperature-unit', 'C');
   const [currentAnalysis, setCurrentAnalysis] = useState<BatteryAnalysis | null>(null);
+  const [theme, setTheme] = useKV<'light' | 'dark'>('theme', 'light');
+
+  useEffect(() => {
+    const isDarkTheme = theme === 'dark';
+    document.documentElement.classList.toggle('dark', isDarkTheme);
+    document.getElementById('spark-app')?.classList.toggle('dark-theme', isDarkTheme);
+  }, [theme]);
 
   const handleDataParsed = (readings: BatteryReading[]) => {
     setCurrentData(readings);
@@ -33,6 +40,10 @@ function App() {
 
   const toggleTemperatureUnit = () => {
     setTemperatureUnit((current) => current === 'C' ? 'F' : 'C');
+  };
+
+  const toggleTheme = () => {
+    setTheme((current) => current === 'dark' ? 'light' : 'dark');
   };
 
   const celsiusToFahrenheit = (celsius: number) => (celsius * 9/5) + 32;
@@ -78,8 +89,19 @@ function App() {
               </p>
             </div>
           </div>
-          
+           
           <div className="flex items-center gap-2 flex-shrink-0">
+            {!hasData && (
+              <Button
+                onClick={toggleTheme}
+                variant="outline"
+                size="icon"
+                aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+                title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
+              >
+                {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+              </Button>
+            )}
             {hasData && (
               <Button 
                 onClick={toggleTemperatureUnit} 
