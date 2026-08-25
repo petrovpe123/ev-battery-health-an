@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -12,6 +12,7 @@ interface FileUploadProps {
 }
 
 export function FileUpload({ onDataParsed }: FileUploadProps) {
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragOver, setDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -112,16 +113,16 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
             </div>
             
             <input
+              ref={fileInputRef}
               type="file"
               accept=".csv"
               onChange={handleFileInput}
               className="hidden"
-              id="file-upload"
               disabled={uploading}
             />
             
             <Button
-              onClick={() => document.getElementById('file-upload')?.click()}
+              onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
               className="mt-4"
             >
