@@ -1,5 +1,13 @@
 import { BatteryReading, BatteryAnalysis } from './types';
 
+// EV battery valid operating ranges used to filter out physically impossible readings.
+// Voltage: 7–16 V covers typical 12 V lead-acid / low-voltage EV systems with margin.
+// Temperature: -50–80 °C covers arctic storage through high-load operating conditions.
+const MIN_VOLTAGE = 7;
+const MAX_VOLTAGE = 16;
+const MIN_TEMPERATURE = -50;
+const MAX_TEMPERATURE = 80;
+
 export function parseCSV(csvContent: string): BatteryReading[] {
   const lines = csvContent.trim().split('\n');
   const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
@@ -22,7 +30,10 @@ export function parseCSV(csvContent: string): BatteryReading[] {
       const voltage = parseFloat(values[voltageIndex]);
       const temperature = parseFloat(values[temperatureIndex]);
       
-      if (!isNaN(voltage) && !isNaN(temperature)) {
+      // Skip readings outside physically valid ranges to prevent corrupt health scores.
+      if (!isNaN(voltage) && !isNaN(temperature) &&
+          voltage >= MIN_VOLTAGE && voltage <= MAX_VOLTAGE &&
+          temperature >= MIN_TEMPERATURE && temperature <= MAX_TEMPERATURE) {
         readings.push({
           timestamp,
           voltage,
