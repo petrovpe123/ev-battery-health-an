@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { FileUpload } from '@/components/FileUpload';
 import { BatteryCharts } from '@/components/BatteryCharts';
 import { AnalysisPanel } from '@/components/AnalysisPanel';
+import { ThemeToggle } from '@/components/ThemeToggle';
 import { BatteryReading, TemperatureUnit, BatteryAnalysis } from '@/lib/types';
 import { Car, ArrowClockwise, Thermometer, FilePdf } from '@phosphor-icons/react';
 import { generatePDFReport } from '@/lib/pdf-export';
@@ -79,7 +80,8 @@ function App() {
             </div>
           </div>
           
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex flex-wrap items-center gap-2 lg:justify-end">
+            <ThemeToggle />
             {hasData && (
               <Button 
                 onClick={toggleTemperatureUnit} 

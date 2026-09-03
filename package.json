@@ -8,6 +8,8 @@
         "kill": "fuser -k 5000/tcp",
         "build": "tsc -b --noCheck && vite build",
         "lint": "eslint .",
+        "test:file-upload": "node --test tests/FileUpload.multiple-instances.test.mjs",
+        "test:spark-fallback": "node --test tests/battery-analysis.test.mjs",
         "optimize": "vite optimize",
         "preview": "vite preview"
     },

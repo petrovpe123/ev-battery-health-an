@@ -21,8 +21,11 @@ export function parseCSV(csvContent: string): BatteryReading[] {
       const timestamp = values[timestampIndex];
       const voltage = parseFloat(values[voltageIndex]);
       const temperature = parseFloat(values[temperatureIndex]);
+      const timestampIsValid = !Number.isNaN(Date.parse(timestamp));
+      const voltageIsValid = !Number.isNaN(voltage) && voltage >= 8 && voltage <= 16;
+      const temperatureIsValid = !Number.isNaN(temperature) && temperature >= -20 && temperature <= 65;
       
-      if (!isNaN(voltage) && !isNaN(temperature)) {
+      if (timestampIsValid && voltageIsValid && temperatureIsValid) {
         readings.push({
           timestamp,
           voltage,
@@ -68,6 +71,71 @@ export function calculateBasicStats(readings: BatteryReading[]) {
   };
 }
 
+function clampScore(value: number): number {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function createFallbackAnalysis(
+  stats: NonNullable<ReturnType<typeof calculateBasicStats>>,
+  reason: string
+): BatteryAnalysis {
+  const voltageSpreadPercent = ((stats.voltageRange.max - stats.voltageRange.min) / Math.max(stats.avgVoltage, 0.1)) * 100;
+  const tempOutOfRange = stats.temperatureRange.min < 15 || stats.temperatureRange.max > 25;
+
+  const healthScore = clampScore(
+    90 -
+    Math.min(voltageSpreadPercent * 3, 35) -
+    (tempOutOfRange ? 15 : 0)
+  );
+
+  const recommendations: string[] = [];
+  if (voltageSpreadPercent > 10) {
+    recommendations.push('Inspect battery connections and charging system for voltage instability.');
+  } else {
+    recommendations.push('Continue monitoring voltage trends during normal driving and charging cycles.');
+  }
+  if (tempOutOfRange) {
+    recommendations.push('Review thermal management because temperatures moved outside the optimal 15-25°C range.');
+  } else {
+    recommendations.push('Thermal behavior looks stable; keep the battery operating near 15-25°C when possible.');
+  }
+  recommendations.push('Run regular maintenance checks and compare this dataset with future telemetry snapshots.');
+
+  return {
+    ...stats,
+    healthScore,
+    summary: `AI analysis unavailable (${reason}). Generated a statistical fallback from ${stats.dataPoints} readings over ${stats.timeSpan}.`,
+    recommendations
+  };
+}
+
+function extractAIResult(response: string): unknown {
+  try {
+    return JSON.parse(response);
+  } catch {
+    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      throw new Error('LLM response did not contain valid JSON');
+    }
+    return JSON.parse(jsonMatch[0]);
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+type SparkLlm = (prompt: string, modelName?: string, jsonMode?: boolean) => Promise<string>;
+
+function getSparkLlm(): SparkLlm | null {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+
+  const spark = window.spark;
+  return typeof spark?.llm === 'function' ? spark.llm.bind(spark) : null;
+}
+
 export async function generateAIAnalysis(readings: BatteryReading[]): Promise<BatteryAnalysis> {
   const stats = calculateBasicStats(readings);
   if (!stats) {
@@ -95,13 +163,37 @@ export async function generateAIAnalysis(readings: BatteryReading[]): Promise<Ba
     
     Focus on voltage stability, temperature patterns, and any concerning trends. Consider typical EV battery operating ranges (10-14V, optimal temp 15-25°C).`;
   
-  const response = await window.spark.llm(promptText, "gpt-4o", true);
-  const aiResult = JSON.parse(response);
-  
-  return {
-    ...stats,
-    healthScore: aiResult.healthScore || 75,
-    summary: aiResult.summary || 'Battery appears to be operating within normal parameters.',
-    recommendations: aiResult.recommendations || ['Monitor voltage stability', 'Keep battery cool', 'Regular maintenance checks']
-  };
+  const sparkLlm = getSparkLlm();
+
+  if (!sparkLlm) {
+    return createFallbackAnalysis(stats, 'Spark SDK is not available');
+  }
+
+  try {
+    const response = await sparkLlm(promptText, "gpt-4o", true);
+    const parsed = extractAIResult(response);
+    const fallback = createFallbackAnalysis(stats, 'invalid AI response');
+
+    if (!isRecord(parsed)) {
+      return fallback;
+    }
+
+    const parsedScore = typeof parsed.healthScore === 'number' ? clampScore(parsed.healthScore) : fallback.healthScore;
+    const parsedSummary = typeof parsed.summary === 'string' && parsed.summary.trim().length > 0
+      ? parsed.summary.trim()
+      : fallback.summary;
+
+    const parsedRecommendations = Array.isArray(parsed.recommendations)
+      ? parsed.recommendations.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+      : [];
+
+    return {
+      ...stats,
+      healthScore: parsedScore,
+      summary: parsedSummary,
+      recommendations: parsedRecommendations.length > 0 ? parsedRecommendations : fallback.recommendations
+    };
+  } catch {
+    return createFallbackAnalysis(stats, 'AI service call failed');
+  }
 }
