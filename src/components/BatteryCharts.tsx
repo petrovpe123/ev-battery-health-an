@@ -4,9 +4,22 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { BatteryReading, TemperatureUnit } from '@/lib/types';
 import { format } from 'date-fns';
 
+const MAX_CHART_POINTS = 1_000;
+
 interface BatteryChartsProps {
   readings: BatteryReading[];
   temperatureUnit: TemperatureUnit;
+}
+
+function sampleReadings(readings: BatteryReading[]): BatteryReading[] {
+  if (readings.length <= MAX_CHART_POINTS) {
+    return readings;
+  }
+
+  return Array.from({ length: MAX_CHART_POINTS }, (_, index) => {
+    const readingIndex = Math.floor(index * (readings.length - 1) / (MAX_CHART_POINTS - 1));
+    return readings[readingIndex];
+  });
 }
 
 export function BatteryCharts({ readings, temperatureUnit }: BatteryChartsProps) {
@@ -16,7 +29,7 @@ export function BatteryCharts({ readings, temperatureUnit }: BatteryChartsProps)
     return temperatureUnit === 'C' ? celsius : celsiusToFahrenheit(celsius);
   };
 
-  const chartData = readings.map(reading => ({
+  const chartData = sampleReadings(readings).map(reading => ({
     ...reading,
     displayTemperature: convertTemperature(reading.temperature),
     time: new Date(reading.timestamp).getTime(),
@@ -53,6 +66,11 @@ export function BatteryCharts({ readings, temperatureUnit }: BatteryChartsProps)
           <CardTitle className="flex items-center gap-2">
             Voltage Over Time
           </CardTitle>
+          {readings.length > MAX_CHART_POINTS && (
+            <p className="text-sm text-muted-foreground">
+              Showing {MAX_CHART_POINTS.toLocaleString()} representative points of {readings.length.toLocaleString()}
+            </p>
+          )}
         </CardHeader>
         <CardContent>
           <div className="chart-container rounded-lg p-4 h-80">
@@ -79,7 +97,7 @@ export function BatteryCharts({ readings, temperatureUnit }: BatteryChartsProps)
                   dataKey="voltage" 
                   stroke="oklch(0.45 0.15 240)" 
                   strokeWidth={2}
-                  dot={{ fill: 'oklch(0.45 0.15 240)', r: 3 }}
+                  dot={chartData.length <= 100 && { fill: 'oklch(0.45 0.15 240)', r: 3 }}
                   activeDot={{ r: 5, fill: 'oklch(0.75 0.12 200)' }}
                 />
               </LineChart>
@@ -129,7 +147,7 @@ export function BatteryCharts({ readings, temperatureUnit }: BatteryChartsProps)
                   dataKey="displayTemperature" 
                   stroke="oklch(0.6 0.18 45)" 
                   strokeWidth={2}
-                  dot={{ fill: 'oklch(0.6 0.18 45)', r: 3 }}
+                  dot={chartData.length <= 100 && { fill: 'oklch(0.6 0.18 45)', r: 3 }}
                   activeDot={{ r: 5, fill: 'oklch(0.75 0.12 200)' }}
                 />
               </LineChart>
