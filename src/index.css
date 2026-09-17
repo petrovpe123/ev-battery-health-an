@@ -45,6 +45,8 @@
   --shadow-spread: 0px;
   --shadow-offset-x: 0px;
   --shadow-offset-y: 4px;
+  --surface-border: color-mix(in oklch, var(--border) 75%, var(--foreground));
+  --surface-shadow: 0 18px 50px color-mix(in oklch, var(--foreground) 8%, transparent);
 }
 
 @theme {
@@ -87,30 +89,86 @@
   }
 }
 
+.app-shell {
+  background:
+    radial-gradient(circle at 10% 10%, oklch(0.8 0.12 260 / 0.25), transparent 28rem),
+    radial-gradient(circle at 90% 20%, oklch(0.82 0.14 180 / 0.2), transparent 26rem),
+    radial-gradient(circle at 50% 100%, oklch(0.9 0.12 75 / 0.2), transparent 30rem),
+    var(--background);
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--primary);
+}
+
+.glass-panel {
+  background: color-mix(in oklch, var(--card) 82%, transparent);
+  border: 1px solid var(--surface-border);
+  box-shadow: var(--surface-shadow);
+}
+
+.metric-card {
+  /* Positions the decorative circle so its visible portion accents the card corner. */
+  --metric-accent-size: 5rem;
+  --metric-accent-top: -2rem;
+  --metric-accent-right: -1rem;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--surface-border);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, var(--card), color-mix(in oklch, var(--primary) 8%, var(--card)));
+  box-shadow: var(--surface-shadow);
+}
+
+.metric-card::after {
+  position: absolute;
+  top: var(--metric-accent-top);
+  right: var(--metric-accent-right);
+  width: var(--metric-accent-size);
+  height: var(--metric-accent-size);
+  border-radius: 9999px;
+  background: color-mix(in oklch, var(--primary) 16%, transparent);
+  content: '';
+}
+
+.metric-value {
+  position: relative;
+  z-index: 1;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.metric-label {
+  position: relative;
+  z-index: 1;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
 .upload-zone {
-  background: linear-gradient(135deg, oklch(0.98 0.01 240) 0%, oklch(0.96 0.02 240) 100%);
-  border: 2px dashed oklch(0.8 0.05 240);
-  transition: all 0.3s ease;
+  background:
+    radial-gradient(circle at top right, oklch(0.78 0.12 260 / 0.2), transparent 16rem),
+    linear-gradient(135deg, var(--muted), var(--secondary));
+  border: 1px dashed color-mix(in oklch, var(--primary) 55%, var(--border));
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
 }
 
 .upload-zone:hover, .upload-zone.drag-over {
-  background: linear-gradient(135deg, oklch(0.96 0.02 240) 0%, oklch(0.94 0.03 240) 100%);
-  border-color: oklch(0.45 0.15 240);
+  background:
+    radial-gradient(circle at top right, oklch(0.72 0.16 260 / 0.3), transparent 16rem),
+    linear-gradient(135deg, var(--secondary), var(--muted));
+  border-color: var(--primary);
   transform: translateY(-2px);
 }
 
 .chart-container {
-  background: oklch(0.99 0.005 240);
-  border: 1px solid oklch(0.92 0.01 240);
-}
-
-.typewriter {
-  overflow: hidden;
-  white-space: nowrap;
-  animation: typing 2s steps(40, end);
-}
-
-@keyframes typing {
-  from { width: 0; }
-  to { width: 100%; }
+  background: linear-gradient(145deg, color-mix(in oklch, var(--muted) 90%, var(--card)), var(--muted));
+  border: 1px solid var(--surface-border);
 }

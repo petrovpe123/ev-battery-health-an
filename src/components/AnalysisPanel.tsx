@@ -144,7 +144,7 @@ export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }:
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            <p className="text-sm leading-relaxed typewriter">
+            <p className="text-sm leading-relaxed">
               {analysis.summary}
             </p>
             
