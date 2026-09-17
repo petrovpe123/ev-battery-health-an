@@ -70,7 +70,7 @@ function App() {
               <BatteryChargingVertical size={26} weight="bold" />
             </div>
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Telemetry studio</p>
+              <p className="eyebrow">Telemetry studio</p>
               <h1 className="text-xl font-bold tracking-tight">EV Battery Health</h1>
             </div>
           </div>
@@ -110,7 +110,7 @@ function App() {
         {!hasData ? (
           <main className="mx-auto max-w-3xl">
             <div className="mb-8 text-center">
-              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-primary">Battery intelligence, unlocked</p>
+              <p className="eyebrow mb-3 text-sm tracking-[0.25em]">Battery intelligence, unlocked</p>
               <h2 className="text-4xl font-bold tracking-tight sm:text-6xl">Turn raw telemetry<br />into clear insights.</h2>
               <p className="mx-auto mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
                 Visualize voltage stability, thermal behavior, and AI-powered battery health in one focused workspace.
@@ -166,7 +166,7 @@ function App() {
 
             <section>
               <div className="mb-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Live view</p>
+                <p className="eyebrow">Live view</p>
                 <h2 className="text-2xl font-bold tracking-tight">Telemetry trends</h2>
               </div>
               <BatteryCharts readings={displayData} temperatureUnit={temperatureUnit || 'C'} />
@@ -176,7 +176,7 @@ function App() {
 
             <section>
               <div className="mb-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Diagnosis</p>
+                <p className="eyebrow">Diagnosis</p>
                 <h2 className="text-2xl font-bold tracking-tight">Health analysis</h2>
               </div>
               <AnalysisPanel 

@@ -89,12 +89,20 @@
 
 .app-shell {
   --surface-border: color-mix(in oklch, var(--border) 75%, var(--foreground));
-  --surface-shadow: 0 18px 50px oklch(0.25 0.05 260 / 0.08);
+  --surface-shadow: 0 18px 50px color-mix(in oklch, var(--foreground) 8%, transparent);
   background:
     radial-gradient(circle at 10% 10%, oklch(0.8 0.12 260 / 0.25), transparent 28rem),
     radial-gradient(circle at 90% 20%, oklch(0.82 0.14 180 / 0.2), transparent 26rem),
     radial-gradient(circle at 50% 100%, oklch(0.9 0.12 75 / 0.2), transparent 30rem),
     var(--background);
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--primary);
 }
 
 .glass-panel {
