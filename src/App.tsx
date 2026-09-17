@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useKV } from '@github/spark/hooks';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Toaster } from '@/components/ui/sonner';
@@ -8,7 +7,7 @@ import { FileUpload } from '@/components/FileUpload';
 import { BatteryCharts } from '@/components/BatteryCharts';
 import { AnalysisPanel } from '@/components/AnalysisPanel';
 import { BatteryReading, TemperatureUnit, BatteryAnalysis } from '@/lib/types';
-import { Car, ArrowClockwise, Thermometer, FilePdf } from '@phosphor-icons/react';
+import { ArrowClockwise, BatteryChargingVertical, FilePdf, Thermometer } from '@phosphor-icons/react';
 import { generatePDFReport } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 
@@ -64,26 +63,24 @@ function App() {
   return (
     <div className="min-h-screen bg-background">
       <Toaster />
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="flex flex-col gap-4 mb-8 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
+        <header className="mb-10 flex flex-col gap-5 border-b border-border pb-6 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              <Car size={24} className="text-primary" />
+            <div className="flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
+              <BatteryChargingVertical size={20} weight="bold" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">EV Battery Health Tracker</h1>
-              <p className="text-muted-foreground">
-                Analyze battery telemetry data with AI-powered insights
-              </p>
+              <h1 className="text-lg font-semibold tracking-tight">EV Battery Health</h1>
+              <p className="text-sm text-muted-foreground">Telemetry analysis</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-2 flex-shrink-0">
+          <div className="flex items-center gap-2">
             {hasData && (
               <Button 
                 onClick={toggleTemperatureUnit} 
                 variant="outline" 
+                size="sm"
                 className="gap-2"
               >
                 <Thermometer size={16} />
@@ -94,92 +91,85 @@ function App() {
               <Button 
                 onClick={handleExportPDF} 
                 variant="default" 
-                className="gap-2 relative z-10"
+                size="sm"
+                className="gap-2"
               >
                 <FilePdf size={16} />
                 Export PDF
               </Button>
             )}
             {hasData && (
-              <Button onClick={handleReset} variant="outline" className="gap-2">
+              <Button onClick={handleReset} variant="ghost" size="sm" className="gap-2">
                 <ArrowClockwise size={16} />
                 Reset
               </Button>
             )}
           </div>
-        </div>
+        </header>
 
-        {/* Main Content */}
         {!hasData ? (
-          <div className="max-w-2xl mx-auto">
-            <FileUpload onDataParsed={handleDataParsed} />
-          </div>
-        ) : (
-          <div className="space-y-8">
-            {/* Data Summary */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Data Summary</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary">
-                      {displayData.length}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Data Points</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary">
-                      {(displayData.reduce((sum, r) => sum + r.voltage, 0) / displayData.length).toFixed(2)}V
-                    </div>
-                    <div className="text-sm text-muted-foreground">Avg Voltage</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary">
-                      {getAvgTemperature().toFixed(1)}°{temperatureUnit}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Avg Temperature</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-primary">
-                      {(() => {
-                        const firstTime = new Date(displayData[0].timestamp);
-                        const lastTime = new Date(displayData[displayData.length - 1].timestamp);
-                        const hours = (lastTime.getTime() - firstTime.getTime()) / (1000 * 60 * 60);
-                        return hours > 24 ? `${Math.round(hours / 24)}d` : `${Math.round(hours)}h`;
-                      })()}
-                    </div>
-                    <div className="text-sm text-muted-foreground">Time Span</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Charts */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Telemetry Visualization</h2>
-              <BatteryCharts readings={displayData} temperatureUnit={temperatureUnit || 'C'} />
+          <main className="mx-auto max-w-xl">
+            <div className="mb-6">
+              <h2 className="text-2xl font-semibold tracking-tight">Analyze a battery log</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Upload a CSV file to review voltage, temperature, and health insights.
+              </p>
             </div>
+            <FileUpload onDataParsed={handleDataParsed} />
+          </main>
+        ) : (
+          <main className="space-y-10">
+            <section className="grid grid-cols-2 gap-y-5 border-y border-border py-5 sm:grid-cols-4">
+              <div>
+                <div className="text-xl font-semibold">{displayData.length}</div>
+                <div className="text-xs text-muted-foreground">Data points</div>
+              </div>
+              <div>
+                <div className="text-xl font-semibold">
+                  {(displayData.reduce((sum, r) => sum + r.voltage, 0) / displayData.length).toFixed(2)}V
+                </div>
+                <div className="text-xs text-muted-foreground">Average voltage</div>
+              </div>
+              <div>
+                <div className="text-xl font-semibold">
+                  {getAvgTemperature().toFixed(1)}°{temperatureUnit}
+                </div>
+                <div className="text-xs text-muted-foreground">Average temperature</div>
+              </div>
+              <div>
+                <div className="text-xl font-semibold">
+                  {(() => {
+                    const firstTime = new Date(displayData[0].timestamp);
+                    const lastTime = new Date(displayData[displayData.length - 1].timestamp);
+                    const hours = (lastTime.getTime() - firstTime.getTime()) / (1000 * 60 * 60);
+                    return hours > 24 ? `${Math.round(hours / 24)}d` : `${Math.round(hours)}h`;
+                  })()}
+                </div>
+                <div className="text-xs text-muted-foreground">Time span</div>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="mb-4 text-base font-semibold">Telemetry</h2>
+              <BatteryCharts readings={displayData} temperatureUnit={temperatureUnit || 'C'} />
+            </section>
 
             <Separator />
 
-            {/* Analysis */}
-            <div>
-              <h2 className="text-xl font-semibold mb-4">Battery Health Analysis</h2>
+            <section>
+              <h2 className="mb-4 text-base font-semibold">Health analysis</h2>
               <AnalysisPanel 
                 readings={displayData} 
                 temperatureUnit={temperatureUnit || 'C'} 
                 onAnalysisComplete={setCurrentAnalysis}
               />
-            </div>
+            </section>
 
-            {/* Upload New Data */}
-            <div className="pt-8 border-t">
-              <h3 className="text-lg font-medium mb-4">Upload New Data</h3>
+            <section className="border-t border-border pt-8">
+              <h2 className="mb-4 text-base font-semibold">Replace data</h2>
               <FileUpload onDataParsed={handleDataParsed} />
-            </div>
-          </div>
+            </section>
+          </main>
         )}
       </div>
     </div>

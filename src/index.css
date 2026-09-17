@@ -88,29 +88,17 @@
 }
 
 .upload-zone {
-  background: linear-gradient(135deg, oklch(0.98 0.01 240) 0%, oklch(0.96 0.02 240) 100%);
-  border: 2px dashed oklch(0.8 0.05 240);
-  transition: all 0.3s ease;
+  background: var(--muted);
+  border: 1px dashed var(--border);
+  transition: border-color 0.2s ease, background-color 0.2s ease;
 }
 
 .upload-zone:hover, .upload-zone.drag-over {
-  background: linear-gradient(135deg, oklch(0.96 0.02 240) 0%, oklch(0.94 0.03 240) 100%);
-  border-color: oklch(0.45 0.15 240);
-  transform: translateY(-2px);
+  background: var(--secondary);
+  border-color: var(--primary);
 }
 
 .chart-container {
-  background: oklch(0.99 0.005 240);
-  border: 1px solid oklch(0.92 0.01 240);
-}
-
-.typewriter {
-  overflow: hidden;
-  white-space: nowrap;
-  animation: typing 2s steps(40, end);
-}
-
-@keyframes typing {
-  from { width: 0; }
-  to { width: 100%; }
+  background: var(--muted);
+  border: 1px solid var(--border);
 }

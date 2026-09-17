@@ -79,9 +79,9 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
 
   return (
     <Card>
-      <CardContent className="p-8">
+      <CardContent className="p-4">
         <div
-          className={`upload-zone rounded-lg p-12 text-center transition-all duration-300 ${
+          className={`upload-zone rounded-md p-8 text-center sm:p-10 ${
             dragOver ? 'drag-over' : ''
           }`}
           onDragOver={(e) => {
@@ -91,24 +91,25 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
         >
-          <div className="flex flex-col items-center gap-4">
-            <div className="p-4 rounded-full bg-primary/10">
-              <Upload size={32} className="text-primary" />
+          <div className="flex flex-col items-center gap-3">
+            <div className="rounded-md bg-primary/10 p-3">
+              <Upload size={24} className="text-primary" />
             </div>
             
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold">Upload Battery Telemetry</h3>
-              <p className="text-muted-foreground">
+            <div className="space-y-1">
+              <h3 className="font-medium">Upload telemetry CSV</h3>
+              <p className="text-sm text-muted-foreground">
                 Drop your CSV file here or click to browse
               </p>
             </div>
             
-            <div className="flex flex-col items-center gap-2 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1.5">
                 <FileText size={16} />
-                <span>CSV format required</span>
+                <span>CSV only</span>
               </div>
-              <span>Maximum file size: 10MB</span>
+              <span>•</span>
+              <span>Up to 10MB</span>
             </div>
             
             <input
@@ -123,7 +124,8 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
             <Button
               onClick={() => document.getElementById('file-upload')?.click()}
               disabled={uploading}
-              className="mt-4"
+              size="sm"
+              className="mt-2"
             >
               {uploading ? 'Processing...' : 'Select File'}
             </Button>
