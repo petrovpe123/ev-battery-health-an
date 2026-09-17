@@ -11,16 +11,17 @@ import { ArrowClockwise, BatteryChargingVertical, FilePdf, Thermometer } from '@
 import { generatePDFReport } from '@/lib/pdf-export';
 import { toast } from 'sonner';
 
+const featureHighlights = [
+  { label: 'CSV', description: 'Import logs' },
+  { label: 'AI', description: 'Health analysis' },
+  { label: 'PDF', description: 'Export reports' },
+];
+
 function App() {
   const [batteryData, setBatteryData] = useKV<BatteryReading[]>('battery-data', []);
   const [currentData, setCurrentData] = useState<BatteryReading[]>([]);
   const [temperatureUnit, setTemperatureUnit] = useKV<TemperatureUnit>('temperature-unit', 'C');
   const [currentAnalysis, setCurrentAnalysis] = useState<BatteryAnalysis | null>(null);
-  const featureHighlights = [
-    { label: 'CSV', description: 'Import logs' },
-    { label: 'AI', description: 'Health analysis' },
-    { label: 'PDF', description: 'Export reports' },
-  ];
 
   const handleDataParsed = (readings: BatteryReading[]) => {
     setCurrentData(readings);
@@ -77,6 +78,7 @@ function App() {
             <div>
               <p className="eyebrow">Telemetry studio</p>
               <h1 className="text-xl font-bold tracking-tight">EV Battery Health</h1>
+              <p className="sr-only">Analyze battery telemetry data with AI-powered insights.</p>
             </div>
           </div>
           
