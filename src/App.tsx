@@ -16,6 +16,11 @@ function App() {
   const [currentData, setCurrentData] = useState<BatteryReading[]>([]);
   const [temperatureUnit, setTemperatureUnit] = useKV<TemperatureUnit>('temperature-unit', 'C');
   const [currentAnalysis, setCurrentAnalysis] = useState<BatteryAnalysis | null>(null);
+  const featureHighlights = [
+    { label: 'CSV', description: 'Import logs' },
+    { label: 'AI', description: 'Health analysis' },
+    { label: 'PDF', description: 'Export reports' },
+  ];
 
   const handleDataParsed = (readings: BatteryReading[]) => {
     setCurrentData(readings);
@@ -118,18 +123,12 @@ function App() {
             </div>
             <FileUpload onDataParsed={handleDataParsed} />
             <div className="mt-6 grid grid-cols-3 gap-3 text-center">
-              <div className="glass-panel rounded-2xl p-4">
-                <div className="text-lg font-bold text-primary">CSV</div>
-                <div className="text-xs text-muted-foreground">Import logs</div>
-              </div>
-              <div className="glass-panel rounded-2xl p-4">
-                <div className="text-lg font-bold text-primary">AI</div>
-                <div className="text-xs text-muted-foreground">Health analysis</div>
-              </div>
-              <div className="glass-panel rounded-2xl p-4">
-                <div className="text-lg font-bold text-primary">PDF</div>
-                <div className="text-xs text-muted-foreground">Export reports</div>
-              </div>
+              {featureHighlights.map(({ label, description }) => (
+                <div key={label} className="glass-panel rounded-2xl p-4">
+                  <div className="text-lg font-bold text-primary">{label}</div>
+                  <div className="text-xs text-muted-foreground">{description}</div>
+                </div>
+              ))}
             </div>
           </main>
         ) : (

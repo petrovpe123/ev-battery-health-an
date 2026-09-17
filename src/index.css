@@ -112,7 +112,7 @@
 }
 
 .metric-card {
-  /* Keeps the decorative circle partially clipped in the card corner. */
+  /* Positions the decorative circle so its visible portion accents the card corner. */
   --metric-accent-size: 5rem;
   --metric-accent-top: -2rem;
   --metric-accent-right: -1rem;
