@@ -97,14 +97,17 @@
 
 .glass-panel {
   background: color-mix(in oklch, var(--card) 82%, transparent);
-  border: 1px solid color-mix(in oklch, var(--border) 75%, white);
+  border: 1px solid color-mix(in oklch, var(--border) 75%, var(--foreground));
   box-shadow: 0 18px 50px oklch(0.25 0.05 260 / 0.08);
 }
 
 .metric-card {
+  --metric-accent-size: 5rem;
+  --metric-accent-top: -2rem;
+  --metric-accent-right: -1rem;
   position: relative;
   overflow: hidden;
-  border: 1px solid color-mix(in oklch, var(--border) 75%, white);
+  border: 1px solid color-mix(in oklch, var(--border) 75%, var(--foreground));
   border-radius: 1rem;
   padding: 1.25rem;
   background: linear-gradient(135deg, var(--card), color-mix(in oklch, var(--primary) 8%, var(--card)));
@@ -113,10 +116,10 @@
 
 .metric-card::after {
   position: absolute;
-  top: -2rem;
-  right: -1rem;
-  width: 5rem;
-  height: 5rem;
+  top: var(--metric-accent-top);
+  right: var(--metric-accent-right);
+  width: var(--metric-accent-size);
+  height: var(--metric-accent-size);
   border-radius: 9999px;
   background: color-mix(in oklch, var(--primary) 16%, transparent);
   content: '';
@@ -155,6 +158,6 @@
 }
 
 .chart-container {
-  background: linear-gradient(145deg, color-mix(in oklch, var(--muted) 90%, white), var(--muted));
-  border: 1px solid color-mix(in oklch, var(--border) 75%, white);
+  background: linear-gradient(145deg, color-mix(in oklch, var(--muted) 90%, var(--card)), var(--muted));
+  border: 1px solid color-mix(in oklch, var(--border) 75%, var(--foreground));
 }
