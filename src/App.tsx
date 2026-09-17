@@ -7,6 +7,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { FileUpload } from '@/components/FileUpload';
 import { BatteryCharts } from '@/components/BatteryCharts';
 import { AnalysisPanel } from '@/components/AnalysisPanel';
+import { TelemetryTable } from '@/components/TelemetryTable';
 import { BatteryReading, TemperatureUnit, BatteryAnalysis } from '@/lib/types';
 import { Car, ArrowClockwise, Thermometer, FilePdf } from '@phosphor-icons/react';
 import { generatePDFReport } from '@/lib/pdf-export';
@@ -161,6 +162,8 @@ function App() {
               <h2 className="text-xl font-semibold mb-4">Telemetry Visualization</h2>
               <BatteryCharts readings={displayData} temperatureUnit={temperatureUnit || 'C'} />
             </div>
+
+            <TelemetryTable readings={displayData} temperatureUnit={temperatureUnit || 'C'} />
 
             <Separator />
 

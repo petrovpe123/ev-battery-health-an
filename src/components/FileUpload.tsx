@@ -5,7 +5,7 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Upload, FileText, Warning } from '@phosphor-icons/react';
 import { BatteryReading } from '@/lib/types';
-import { parseCSV } from '@/lib/battery-analysis';
+import { parseCSVWithValidation, CSV_LIMITS } from '@/lib/csv-validator';
 
 interface FileUploadProps {
   onDataParsed: (readings: BatteryReading[]) => void;
@@ -16,11 +16,13 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [warnings, setWarnings] = useState<string[]>([]);
 
   const handleFileRead = useCallback(async (file: File) => {
     setUploading(true);
     setProgress(0);
     setError(null);
+    setWarnings([]);
 
     try {
       const content = await file.text();
@@ -28,11 +30,8 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
       setProgress(50);
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      const readings = parseCSV(content);
-      
-      if (readings.length === 0) {
-        throw new Error('No valid battery readings found in file');
-      }
+      const { readings, warnings: validationWarnings } = parseCSVWithValidation(content);
+      setWarnings(validationWarnings);
       
       setProgress(100);
       await new Promise(resolve => setTimeout(resolve, 300));
@@ -52,8 +51,8 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
       return;
     }
     
-    if (file.size > 10 * 1024 * 1024) {
-      setError('File size must be less than 10MB');
+    if (file.size > CSV_LIMITS.maxFileSizeBytes) {
+      setError('File size must be less than 5 MB');
       return;
     }
     
@@ -108,7 +107,7 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
                 <FileText size={16} />
                 <span>CSV format required</span>
               </div>
-              <span>Maximum file size: 10MB</span>
+              <span>Maximum file size: 5 MB · Up to 100,000 rows</span>
             </div>
             
             <input
@@ -144,6 +143,13 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
           <Alert className="mt-6" variant="destructive">
             <Warning size={16} />
             <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
+        {warnings.length > 0 && (
+          <Alert className="mt-6">
+            <Warning size={16} />
+            <AlertDescription>{warnings.join(' ')}</AlertDescription>
           </Alert>
         )}
       </CardContent>

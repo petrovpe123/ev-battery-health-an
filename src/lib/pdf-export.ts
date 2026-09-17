@@ -64,6 +64,17 @@ export function generatePDFReport(data: PDFExportData): void {
   doc.setFillColor(healthColor[0], healthColor[1], healthColor[2]);
   doc.roundedRect(margin, yPos, fillWidth, progressBarHeight, 2, 2, 'F');
   yPos += 20;
+
+  doc.setFontSize(11);
+  doc.setTextColor(60, 60, 60);
+  doc.text(
+    `AI Interpretation Score: ${typeof analysis.aiHealthScore === 'number' ? `${analysis.aiHealthScore}/100` : 'Unavailable'}`,
+    margin,
+    yPos
+  );
+  yPos += 6;
+  doc.text(`Deterministic data confidence: ${(analysis.deterministicConfidence * 100).toFixed(0)}%`, margin, yPos);
+  yPos += 15;
   
   doc.setFontSize(16);
   doc.setTextColor(0, 0, 0);
@@ -84,6 +95,47 @@ export function generatePDFReport(data: PDFExportData): void {
   summaryData.forEach(line => {
     doc.text(line, margin + 5, yPos);
     yPos += 6;
+  });
+  yPos += 10;
+
+  doc.setFontSize(16);
+  doc.setTextColor(0, 0, 0);
+  doc.text('Deterministic Metrics', margin, yPos);
+  yPos += 8;
+
+  doc.setFontSize(10);
+  doc.setTextColor(60, 60, 60);
+  const metricData = [
+    `Voltage stability: ${(analysis.metrics.voltageCoefficientOfVariation * 100).toFixed(2)}% variation`,
+    `Nominal voltage adherence: ${(analysis.metrics.nominalVoltageAdherence * 100).toFixed(1)}%`,
+    `Voltage drift: ${analysis.metrics.voltageDriftRateMillivoltsPerHour.toFixed(2)}mV/hour`,
+    `Thermal stress: ${analysis.metrics.thermalStressHours.toFixed(2)} hours`,
+    `Voltage spike detected: ${analysis.metrics.voltageSpikeDetected ? 'Yes' : 'No'}`,
+    `Voltage clipping detected: ${analysis.metrics.voltageClippingDetected ? 'Yes' : 'No'}`,
+    `Critical temperature detected: ${analysis.metrics.criticalTemperatureDetected ? 'Yes' : 'No'}`
+  ];
+
+  metricData.forEach(line => {
+    if (yPos > 270) {
+      doc.addPage();
+      yPos = 20;
+    }
+    doc.text(line, margin + 5, yPos);
+    yPos += 6;
+  });
+  yPos += 5;
+
+  doc.setFontSize(8);
+  doc.setTextColor(100, 100, 100);
+  const limitation = 'Metrics are based on voltage, temperature, and timestamps; true SOH, SOC, internal resistance, capacity degradation, and cell imbalance are not calculated.';
+  const limitationLines = doc.splitTextToSize(limitation, pageWidth - 2 * margin - 10);
+  limitationLines.forEach((line: string) => {
+    if (yPos > 270) {
+      doc.addPage();
+      yPos = 20;
+    }
+    doc.text(line, margin + 5, yPos);
+    yPos += 4;
   });
   yPos += 10;
   

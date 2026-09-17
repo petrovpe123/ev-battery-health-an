@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BatteryChargingVertical, Sparkle, TrendUp, TrendDown } from '@phosphor-icons/react';
+import { BatteryChargingVertical, Sparkle, TrendUp } from '@phosphor-icons/react';
 import { BatteryAnalysis, BatteryReading, TemperatureUnit } from '@/lib/types';
 import { generateAIAnalysis } from '@/lib/battery-analysis';
 
@@ -115,7 +115,7 @@ export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }:
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <BatteryChargingVertical size={20} />
-            Battery Health Score
+            Deterministic Health Score
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -128,7 +128,71 @@ export function AnalysisPanel({ readings, temperatureUnit, onAnalysisComplete }:
             </div>
             <Progress value={analysis.healthScore} className="h-3" />
             <p className="text-sm text-muted-foreground">
-              Score based on voltage stability, temperature patterns, and operating conditions
+              Reproducible score based on voltage stability, thermal conditions, drift, and detected anomalies.
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Data confidence: {(analysis.deterministicConfidence * 100).toFixed(0)}%
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Sparkle size={20} />
+            AI Interpretation Score
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {typeof analysis.aiHealthScore === 'number' ? (
+            <div className="flex items-center justify-between">
+              <span className="text-3xl font-bold">{analysis.aiHealthScore}</span>
+              <Badge variant="outline" className={`${getHealthColor(analysis.aiHealthScore)} text-white`}>
+                {getHealthLabel(analysis.aiHealthScore)}
+              </Badge>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              AI scoring was unavailable. The deterministic score remains available.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Metric Breakdown</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <div className="flex justify-between text-sm">
+              <span>Voltage stability</span>
+              <span className="font-mono">{(analysis.metrics.voltageCoefficientOfVariation * 100).toFixed(2)}% variation</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span>Nominal voltage</span>
+              <span className="font-mono">{(analysis.metrics.nominalVoltageAdherence * 100).toFixed(1)}%</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span>Voltage drift</span>
+              <span className="font-mono">{analysis.metrics.voltageDriftRateMillivoltsPerHour.toFixed(2)} mV/h</span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span>Thermal stress</span>
+              <span className="font-mono">{analysis.metrics.thermalStressHours.toFixed(2)} h</span>
+            </div>
+          </div>
+          <div className="border-t pt-3 text-sm text-muted-foreground">
+            <p>
+              Alerts: {[
+                analysis.metrics.voltageSpikeDetected && 'voltage spike',
+                analysis.metrics.voltageClippingDetected && 'voltage clipping',
+                analysis.metrics.criticalTemperatureDetected && 'critical temperature'
+              ].filter(Boolean).join(', ') || 'none detected'}
+            </p>
+            <p className="mt-2 text-xs">
+              These metrics assess the supplied telemetry. They do not calculate true SOH, SOC, internal resistance, capacity degradation, or cell imbalance.
             </p>
           </div>
         </CardContent>
