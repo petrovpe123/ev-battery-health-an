@@ -88,6 +88,8 @@
 }
 
 .app-shell {
+  --surface-border: color-mix(in oklch, var(--border) 75%, var(--foreground));
+  --surface-shadow: 0 18px 50px oklch(0.25 0.05 260 / 0.08);
   background:
     radial-gradient(circle at 10% 10%, oklch(0.8 0.12 260 / 0.25), transparent 28rem),
     radial-gradient(circle at 90% 20%, oklch(0.82 0.14 180 / 0.2), transparent 26rem),
@@ -97,21 +99,22 @@
 
 .glass-panel {
   background: color-mix(in oklch, var(--card) 82%, transparent);
-  border: 1px solid color-mix(in oklch, var(--border) 75%, var(--foreground));
-  box-shadow: 0 18px 50px oklch(0.25 0.05 260 / 0.08);
+  border: 1px solid var(--surface-border);
+  box-shadow: var(--surface-shadow);
 }
 
 .metric-card {
+  /* Keeps the decorative circle partially clipped in the card corner. */
   --metric-accent-size: 5rem;
   --metric-accent-top: -2rem;
   --metric-accent-right: -1rem;
   position: relative;
   overflow: hidden;
-  border: 1px solid color-mix(in oklch, var(--border) 75%, var(--foreground));
+  border: 1px solid var(--surface-border);
   border-radius: 1rem;
   padding: 1.25rem;
   background: linear-gradient(135deg, var(--card), color-mix(in oklch, var(--primary) 8%, var(--card)));
-  box-shadow: 0 12px 30px oklch(0.25 0.05 260 / 0.08);
+  box-shadow: var(--surface-shadow);
 }
 
 .metric-card::after {
@@ -159,5 +162,5 @@
 
 .chart-container {
   background: linear-gradient(145deg, color-mix(in oklch, var(--muted) 90%, var(--card)), var(--muted));
-  border: 1px solid color-mix(in oklch, var(--border) 75%, var(--foreground));
+  border: 1px solid var(--surface-border);
 }
