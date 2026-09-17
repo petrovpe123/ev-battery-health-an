@@ -134,6 +134,7 @@ function App() {
         ) : (
           <main className="space-y-10">
             <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <h2 className="sr-only">Data summary</h2>
               <div className="metric-card">
                 <div className="metric-value">{displayData.length}</div>
                 <div className="metric-label">Data points</div>
