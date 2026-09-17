@@ -87,18 +87,74 @@
   }
 }
 
+.app-shell {
+  background:
+    radial-gradient(circle at 10% 10%, oklch(0.8 0.12 260 / 0.25), transparent 28rem),
+    radial-gradient(circle at 90% 20%, oklch(0.82 0.14 180 / 0.2), transparent 26rem),
+    radial-gradient(circle at 50% 100%, oklch(0.9 0.12 75 / 0.2), transparent 30rem),
+    var(--background);
+}
+
+.glass-panel {
+  background: color-mix(in oklch, var(--card) 82%, transparent);
+  border: 1px solid color-mix(in oklch, var(--border) 75%, white);
+  box-shadow: 0 18px 50px oklch(0.25 0.05 260 / 0.08);
+}
+
+.metric-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in oklch, var(--border) 75%, white);
+  border-radius: 1rem;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, var(--card), color-mix(in oklch, var(--primary) 8%, var(--card)));
+  box-shadow: 0 12px 30px oklch(0.25 0.05 260 / 0.08);
+}
+
+.metric-card::after {
+  position: absolute;
+  top: -2rem;
+  right: -1rem;
+  width: 5rem;
+  height: 5rem;
+  border-radius: 9999px;
+  background: color-mix(in oklch, var(--primary) 16%, transparent);
+  content: '';
+}
+
+.metric-value {
+  position: relative;
+  z-index: 1;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.metric-label {
+  position: relative;
+  z-index: 1;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--muted-foreground);
+}
+
 .upload-zone {
-  background: var(--muted);
-  border: 1px dashed var(--border);
-  transition: border-color 0.2s ease, background-color 0.2s ease;
+  background:
+    radial-gradient(circle at top right, oklch(0.78 0.12 260 / 0.2), transparent 16rem),
+    linear-gradient(135deg, var(--muted), var(--secondary));
+  border: 1px dashed color-mix(in oklch, var(--primary) 55%, var(--border));
+  transition: border-color 0.2s ease, background-color 0.2s ease, transform 0.2s ease;
 }
 
 .upload-zone:hover, .upload-zone.drag-over {
-  background: var(--secondary);
+  background:
+    radial-gradient(circle at top right, oklch(0.72 0.16 260 / 0.3), transparent 16rem),
+    linear-gradient(135deg, var(--secondary), var(--muted));
   border-color: var(--primary);
+  transform: translateY(-2px);
 }
 
 .chart-container {
-  background: var(--muted);
-  border: 1px solid var(--border);
+  background: linear-gradient(145deg, color-mix(in oklch, var(--muted) 90%, white), var(--muted));
+  border: 1px solid color-mix(in oklch, var(--border) 75%, white);
 }

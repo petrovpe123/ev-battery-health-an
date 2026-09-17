@@ -61,17 +61,17 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="app-shell min-h-screen bg-background">
       <Toaster />
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-        <header className="mb-10 flex flex-col gap-5 border-b border-border pb-6 sm:flex-row sm:items-center sm:justify-between">
+      <div className="relative mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:py-10">
+        <header className="glass-panel mb-10 flex flex-col gap-5 rounded-3xl p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
           <div className="flex items-center gap-3">
-            <div className="flex size-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
-              <BatteryChargingVertical size={20} weight="bold" />
+            <div className="flex size-12 items-center justify-center rounded-2xl bg-primary text-primary-foreground shadow-lg shadow-primary/30">
+              <BatteryChargingVertical size={26} weight="bold" />
             </div>
             <div>
-              <h1 className="text-lg font-semibold tracking-tight">EV Battery Health</h1>
-              <p className="text-sm text-muted-foreground">Telemetry analysis</p>
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Telemetry studio</p>
+              <h1 className="text-xl font-bold tracking-tight">EV Battery Health</h1>
             </div>
           </div>
           
@@ -108,36 +108,51 @@ function App() {
         </header>
 
         {!hasData ? (
-          <main className="mx-auto max-w-xl">
-            <div className="mb-6">
-              <h2 className="text-2xl font-semibold tracking-tight">Analyze a battery log</h2>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Upload a CSV file to review voltage, temperature, and health insights.
+          <main className="mx-auto max-w-3xl">
+            <div className="mb-8 text-center">
+              <p className="mb-3 text-sm font-semibold uppercase tracking-[0.25em] text-primary">Battery intelligence, unlocked</p>
+              <h2 className="text-4xl font-bold tracking-tight sm:text-6xl">Turn raw telemetry<br />into clear insights.</h2>
+              <p className="mx-auto mt-5 max-w-xl text-base text-muted-foreground sm:text-lg">
+                Visualize voltage stability, thermal behavior, and AI-powered battery health in one focused workspace.
               </p>
             </div>
             <FileUpload onDataParsed={handleDataParsed} />
+            <div className="mt-6 grid grid-cols-3 gap-3 text-center">
+              <div className="glass-panel rounded-2xl p-4">
+                <div className="text-lg font-bold text-primary">CSV</div>
+                <div className="text-xs text-muted-foreground">Import logs</div>
+              </div>
+              <div className="glass-panel rounded-2xl p-4">
+                <div className="text-lg font-bold text-primary">AI</div>
+                <div className="text-xs text-muted-foreground">Health analysis</div>
+              </div>
+              <div className="glass-panel rounded-2xl p-4">
+                <div className="text-lg font-bold text-primary">PDF</div>
+                <div className="text-xs text-muted-foreground">Export reports</div>
+              </div>
+            </div>
           </main>
         ) : (
           <main className="space-y-10">
-            <section className="grid grid-cols-2 gap-y-5 border-y border-border py-5 sm:grid-cols-4">
-              <div>
-                <div className="text-xl font-semibold">{displayData.length}</div>
-                <div className="text-xs text-muted-foreground">Data points</div>
+            <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+              <div className="metric-card">
+                <div className="metric-value">{displayData.length}</div>
+                <div className="metric-label">Data points</div>
               </div>
-              <div>
-                <div className="text-xl font-semibold">
+              <div className="metric-card">
+                <div className="metric-value">
                   {(displayData.reduce((sum, r) => sum + r.voltage, 0) / displayData.length).toFixed(2)}V
                 </div>
-                <div className="text-xs text-muted-foreground">Average voltage</div>
+                <div className="metric-label">Average voltage</div>
               </div>
-              <div>
-                <div className="text-xl font-semibold">
+              <div className="metric-card">
+                <div className="metric-value">
                   {getAvgTemperature().toFixed(1)}°{temperatureUnit}
                 </div>
-                <div className="text-xs text-muted-foreground">Average temperature</div>
+                <div className="metric-label">Average temperature</div>
               </div>
-              <div>
-                <div className="text-xl font-semibold">
+              <div className="metric-card">
+                <div className="metric-value">
                   {(() => {
                     const firstTime = new Date(displayData[0].timestamp);
                     const lastTime = new Date(displayData[displayData.length - 1].timestamp);
@@ -145,19 +160,25 @@ function App() {
                     return hours > 24 ? `${Math.round(hours / 24)}d` : `${Math.round(hours)}h`;
                   })()}
                 </div>
-                <div className="text-xs text-muted-foreground">Time span</div>
+                <div className="metric-label">Time span</div>
               </div>
             </section>
 
             <section>
-              <h2 className="mb-4 text-base font-semibold">Telemetry</h2>
+              <div className="mb-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Live view</p>
+                <h2 className="text-2xl font-bold tracking-tight">Telemetry trends</h2>
+              </div>
               <BatteryCharts readings={displayData} temperatureUnit={temperatureUnit || 'C'} />
             </section>
 
             <Separator />
 
             <section>
-              <h2 className="mb-4 text-base font-semibold">Health analysis</h2>
+              <div className="mb-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-primary">Diagnosis</p>
+                <h2 className="text-2xl font-bold tracking-tight">Health analysis</h2>
+              </div>
               <AnalysisPanel 
                 readings={displayData} 
                 temperatureUnit={temperatureUnit || 'C'} 
@@ -165,8 +186,9 @@ function App() {
               />
             </section>
 
-            <section className="border-t border-border pt-8">
-              <h2 className="mb-4 text-base font-semibold">Replace data</h2>
+            <section className="glass-panel rounded-3xl p-5 sm:p-6">
+              <h2 className="mb-1 text-xl font-bold">Analyze another log</h2>
+              <p className="mb-5 text-sm text-muted-foreground">Replace the current dataset with a new telemetry CSV.</p>
               <FileUpload onDataParsed={handleDataParsed} />
             </section>
           </main>

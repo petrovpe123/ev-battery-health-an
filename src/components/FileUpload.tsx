@@ -79,9 +79,9 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
 
   return (
     <Card>
-      <CardContent className="p-4">
+      <CardContent className="p-2">
         <div
-          className={`upload-zone rounded-md p-8 text-center sm:p-10 ${
+          className={`upload-zone rounded-2xl p-8 text-center sm:p-12 ${
             dragOver ? 'drag-over' : ''
           }`}
           onDragOver={(e) => {
@@ -91,19 +91,19 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
           onDragLeave={() => setDragOver(false)}
           onDrop={handleDrop}
         >
-          <div className="flex flex-col items-center gap-3">
-            <div className="rounded-md bg-primary/10 p-3">
-              <Upload size={24} className="text-primary" />
+          <div className="flex flex-col items-center gap-4">
+            <div className="rounded-2xl bg-primary p-4 text-primary-foreground shadow-xl shadow-primary/30">
+              <Upload size={32} weight="bold" />
             </div>
             
-            <div className="space-y-1">
-              <h3 className="font-medium">Upload telemetry CSV</h3>
-              <p className="text-sm text-muted-foreground">
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold">Upload battery telemetry</h3>
+              <p className="text-sm text-muted-foreground sm:text-base">
                 Drop your CSV file here or click to browse
               </p>
             </div>
             
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 rounded-full bg-background/70 px-4 py-2 text-xs text-muted-foreground">
               <div className="flex items-center gap-1.5">
                 <FileText size={16} />
                 <span>CSV only</span>
@@ -124,8 +124,7 @@ export function FileUpload({ onDataParsed }: FileUploadProps) {
             <Button
               onClick={() => document.getElementById('file-upload')?.click()}
               disabled={uploading}
-              size="sm"
-              className="mt-2"
+              className="mt-3 rounded-full px-6 shadow-lg shadow-primary/25"
             >
               {uploading ? 'Processing...' : 'Select File'}
             </Button>
