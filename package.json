@@ -7,6 +7,7 @@
         "dev": "vite",
         "kill": "fuser -k 5000/tcp",
         "build": "tsc -b --noCheck && vite build",
+        "test": "vitest run",
         "lint": "eslint .",
         "optimize": "vite optimize",
         "preview": "vite preview"
@@ -89,7 +90,8 @@
         "tailwindcss": "^4.1.11",
         "typescript": "~5.7.2",
         "typescript-eslint": "^8.38.0",
-        "vite": "^6.3.5"
+        "vite": "^6.3.5",
+        "vitest": "^3.2.6"
     },
     "workspaces": {
         "packages": [
